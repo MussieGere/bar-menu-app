@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Ai Paladini</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Montserrat:wght@400;500;600&display=swap');
+
+:root {
+  --gold: #8B5A2B; --dark: #F4F1EA; --surface: #FFFFFF; --text: #2C2C2C; --muted: #666666;
+}
+body { background: var(--dark); color: var(--text); font-family: 'Montserrat', sans-serif; padding: 40px 20px; max-width: 800px; margin: 0 auto; }
+h1 { font-family: 'Cormorant Garamond', serif; font-size: 40px; text-align: center; color: var(--gold); margin-bottom: 30px; }
+
+.nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab-btn { flex: 1; padding: 15px; background: transparent; border: 1px solid var(--gold); color: var(--gold); cursor: pointer; font-weight: 600; text-transform: uppercase; font-size: 12px; border-radius: 4px; }
+.tab-btn.active { background: var(--gold); color: white; }
+
+.panel { display: none; background: var(--surface); padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.panel.active { display: block; }
+
+/* QR Panel */
+.qr-box { text-align: center; }
+.qr-box img { padding: 10px; border: 1px solid rgba(139,90,43,0.3); border-radius: 8px; margin: 20px 0; }
+
+/* Menu Manager */
+.menu-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+.item-info strong { font-size: 16px; font-family: 'Cormorant Garamond', serif; }
+.item-info span { font-size: 12px; color: var(--muted); margin-left: 10px; }
+
+/* Bluetooth-style Toggle Switch */
+.switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--session-ok, #4CAF82); }
+input:checked + .slider:before { transform: translateX(26px); }
+
+/* Form */
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
+.form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
+.btn-submit { width: 100%; padding: 15px; background: var(--gold); color: white; border: none; font-weight: 600; text-transform: uppercase; cursor: pointer; border-radius: 4px; margin-top: 10px; }
+
+</style>
+</head>
+<body>
+
+<div style="text-align: center; margin-bottom: 10px;">
+  <img src="/logo.jpg" alt="Logo" style="height: 220px; mix-blend-mode: multiply; margin: 15px 0;" onerror="this.style.display='none'">
+</div>
+<h1>Staff Dashboard</h1>
+
+<div class="nav-tabs">
+  <button class="tab-btn active" onclick="switchTab('qr')">Table QR Code</button>
+  <button class="tab-btn" onclick="switchTab('qr-wine')">Wine QR Code</button>
+  <button class="tab-btn" onclick="switchTab('qr-desserts')">Desserts QR Code</button>
+  <button class="tab-btn" onclick="switchTab('manage')">Manage Menu</button>
+  <button class="tab-btn" onclick="switchTab('edit')">Edit Item / Add Image</button>
+  <button class="tab-btn" onclick="switchTab('add')">Add Item</button>
+</div>
+
+<div id="panel-qr" class="panel active qr-box">
+  <h2>The Master Table QR</h2>
+  <p style="font-size: 13px; color: #666;">Print this QR code and place it on your tables. Every time a customer scans it, it automatically creates a fresh 30-minute session for them.</p>
+  <img id="masterQr" src="" width="250">
+  <p id="masterUrl" style="font-size: 11px; color: #999; word-break: break-all;"></p>
+</div>
+
+<div id="panel-qr-wine" class="panel qr-box">
+  <h2>Wine List QR Code</h2>
+  <p style="font-size: 13px; color: #666;">Customers who scan this QR code will see the wine list and other beverage options.</p>
+  <img id="wineQr" src="" width="250">
+  <p id="wineUrl" style="font-size: 11px; color: #999; word-break: break-all;"></p>
+</div>
+
+<div id="panel-qr-desserts" class="panel qr-box">
+  <h2>Desserts & Breakfast QR Code</h2>
+  <p style="font-size: 13px; color: #666;">Customers who scan this QR code will see the desserts, ice cream, and breakfast menu.</p>
+  <img id="dessertsQr" src="" width="250">
+  <p id="dessertsUrl" style="font-size: 11px; color: #999; word-break: break-all;"></p>
+</div>
+
+<div id="panel-manage" class="panel">
+  <h2>Current Menu</h2>
+  <div class="nav-tabs" id="manage-tabs" style="background: white; border: none; margin-bottom: 20px; padding: 0;">
+    <button class="tab-btn" onclick="switchManageTab('food', this)" style="border-bottom: 3px solid transparent;">Food & Pizze</button>
+    <button class="tab-btn" onclick="switchManageTab('drinks', this)" style="border-bottom: 3px solid transparent;">Bar & Caffe</button>
+    <button class="tab-btn" onclick="switchManageTab('restaurant', this)" style="border-bottom: 3px solid transparent;">Ristorante</button>
+    <button class="tab-btn" onclick="switchManageTab('wine', this)" style="border-bottom: 3px solid transparent;">Wine List</button>
+    <button class="tab-btn" onclick="switchManageTab('desserts', this)" style="border-bottom: 3px solid transparent;">Desserts</button>
+  </div>
+  <div id="menu-list">Loading...</div>
+</div>
+
+<div id="panel-edit" class="panel">
+  <h2>Edit Item / Add Image / Change Price / Delete</h2>
+  <div id="edit-search" style="margin-bottom: 20px;">
+    <input type="text" id="edit-search-input" placeholder="Search for item to edit..." style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+    <div id="edit-search-results" style="margin-top: 10px;"></div>
+  </div>
+  <div id="edit-item-form" style="display: none; border-top: 1px solid #ccc; padding-top: 20px;">
+    <h3 id="edit-item-name" style="color: var(--gold); margin-bottom: 15px;"></h3>
+    
+    <div class="form-group">
+      <label>Update Price</label>
+      <div style="display: flex; align-items: center;">
+        <span style="padding: 10px; background: #f5f5f5; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px; font-weight: 600; color: #666;">€</span>
+        <input type="text" id="edit-price-input" placeholder="e.g. 8,50" style="border-radius: 0 4px 4px 0;">
+      </div>
+    </div>
+    <button onclick="updateItemPrice()" style="width: 100%; padding: 12px; background: #4CAF82; color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-bottom: 15px;">Update Price</button>
+    
+    <div class="form-group">
+      <label>Add/Update Item Image</label>
+      <input type="file" id="edit-image-file" accept="image/jpeg,image/png,image/webp">
+      <img id="edit-image-preview" style="max-width: 150px; margin-top: 10px; border-radius: 4px; display: none;">
+    </div>
+    <button onclick="saveEditedItem()" style="width: 100%; padding: 12px; background: var(--gold); color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-bottom: 15px;">Save Image</button>
+    
+    <div style="border-top: 1px solid #ddd; padding-top: 15px; margin-top: 15px;">
+      <button onclick="deleteItem()" style="width: 100%; padding: 12px; background: #d32f2f; color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-bottom: 10px;">🗑️ Delete Item</button>
+      <button onclick="cancelEdit()" style="width: 100%; padding: 12px; background: #ccc; color: #333; border: none; font-weight: 600; cursor: pointer; border-radius: 4px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="panel-add" class="panel">
+  <h2>Add New Menu Item</h2>
+  <form id="addForm">
+    <div class="form-group">
+      <label>Section</label>
+      <select id="f-tab" required>
+        <option value="food">Food & Pizze</option>
+        <option value="drinks">Bar & Caffetteria</option>
+        <option value="restaurant">Ristorante</option>
+        <option value="wine">Wine</option>
+        <option value="desserts">Desserts</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select id="f-cat" required>
+        <option value="">-- Select Category --</option>
+        <optgroup label="Food & Pizze">
+          <option value="Burger / Burgers">Burger / Burgers</option>
+          <option value="Panini / Sandwiches">Panini / Sandwiches</option>
+          <option value="Pizze / Pizzas">Pizze / Pizzas</option>
+        </optgroup>
+        <optgroup label="Bar & Caffetteria">
+          <option value="Birre / Beers">Birre / Beers</option>
+          <option value="Vini / Wine">Vini / Wine</option>
+          <option value="Liquori / Liquors">Liquori / Liquors</option>
+          <option value="Aperitivi / Long drink">Aperitivi / Long drink</option>
+          <option value="Bevande / Soft drink">Bevande / Soft drink</option>
+        </optgroup>
+        <optgroup label="Ristorante">
+          <option value="Antipasti / Starters">Antipasti / Starters</option>
+          <option value="Primi Piatti / First Courses">Primi Piatti / First Courses</option>
+          <option value="Secondi Piatti / Main Courses">Secondi Piatti / Main Courses</option>
+        </optgroup>
+        <optgroup label="Wine & Desserts">
+          <option value="Vini Bianchi / White Wine">Vini Bianchi / White Wine</option>
+          <option value="Vini Rossi / Red Wine">Vini Rossi / Red Wine</option>
+          <option value="Vini Rosati / Rosé Wine">Vini Rosati / Rosé Wine</option>
+          <option value="Spumanti / Sparkling">Spumanti / Sparkling</option>
+          <option value="Dessert / Dolci">Dessert / Dolci</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Item Name</label>
+      <input type="text" id="f-name" required>
+    </div>
+    <div class="form-group">
+      <label>Price (e.g. '8,50' - euro sign added automatically)</label>
+      <div style="display: flex; align-items: center;">
+        <span style="padding: 10px; background: #f5f5f5; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px; font-weight: 600; color: #666;">€</span>
+        <input type="text" id="f-price" placeholder="e.g. 8,50" required style="border-radius: 0 4px 4px 0;">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description / Ingredients (Optional)</label>
+      <input type="text" id="f-desc">
+    </div>
+    <div class="form-group">
+      <label>Item Image (Optional - JPG, PNG, WebP up to 5MB)</label>
+      <input type="file" id="f-image" accept="image/jpeg,image/png,image/webp">
+      <img id="f-image-preview" style="max-width: 150px; margin-top: 10px; border-radius: 4px; display: none;">
+    </div>
+    <button type="submit" class="btn-submit">Add to Menu</button>
+  </form>
+</div>
+
+<script>
+  function switchTab(tab) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // Load All QR Codes
+  async function loadQr() {
+    const [mainRes, wineRes, dessertsRes] = await Promise.all([
+      fetch('/api/admin-qr'),
+      fetch('/api/admin-qr-wine'),
+      fetch('/api/admin-qr-desserts')
+    ]);
+    
+    const mainData = await mainRes.json();
+    const wineData = await wineRes.json();
+    const dessertsData = await dessertsRes.json();
+    
+    document.getElementById('masterQr').src = mainData.qrDataUrl;
+    document.getElementById('masterUrl').innerText = mainData.scanUrl;
+    
+    document.getElementById('wineQr').src = wineData.qrDataUrl;
+    document.getElementById('wineUrl').innerText = wineData.scanUrl;
+    
+    document.getElementById('dessertsQr').src = dessertsData.qrDataUrl;
+    document.getElementById('dessertsUrl').innerText = dessertsData.scanUrl;
+  }
+
+  // Image preview on file selection
+  document.getElementById('f-image').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const preview = document.getElementById('f-image-preview');
+        preview.src = event.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Manage tab switching for organized menu
+  function switchManageTab(tab, btn) {
+    document.querySelectorAll('#manage-tabs .tab-btn').forEach(b => b.style.borderBottomColor = 'transparent');
+    btn.style.borderBottomColor = 'var(--gold)';
+    loadMenu(tab);
+  }
+
+  // Image preview on file selection
+  document.getElementById('f-image').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const preview = document.getElementById('f-image-preview');
+        preview.src = event.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Edit image preview
+  if (document.getElementById('edit-image-file')) {
+    document.getElementById('edit-image-file').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const preview = document.getElementById('edit-image-preview');
+          preview.src = event.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  let currentEditItem = null;
+
+  // Search for items to edit
+  document.getElementById('edit-search-input').addEventListener('input', async (e) => {
+    const query = e.target.value.toLowerCase();
+    if (query.length < 2) {
+      document.getElementById('edit-search-results').innerHTML = '';
+      return;
+    }
+    
+    const res = await fetch('/api/menu');
+    const menu = await res.json();
+    const results = menu.filter(item => 
+      item.name.toLowerCase().includes(query) || 
+      item.category.toLowerCase().includes(query)
+    );
+    
+    const resultsDiv = document.getElementById('edit-search-results');
+    resultsDiv.innerHTML = results.map(item => `
+      <div style="padding: 10px; background: #f9f9f9; margin: 5px 0; border-radius: 4px; cursor: pointer; border-left: 3px solid var(--gold);" onclick="selectItemForEdit('${item.id}', '${item.name}', '${item.image || ''}')">
+        <strong>${item.name}</strong> - ${item.category} <span style="color: #999;">${item.price}</span>
+      </div>
+    `).join('');
+  });
+
+  function selectItemForEdit(id, name, currentImage) {
+    currentEditItem = id;
+    document.getElementById('edit-item-name').innerText = `Editing: ${name}`;
+    document.getElementById('edit-item-form').style.display = 'block';
+    document.getElementById('edit-image-file').value = '';
+    document.getElementById('edit-price-input').value = '';
+    
+    // Get current price from menu
+    fetch('/api/menu').then(res => res.json()).then(menu => {
+      const item = menu.find(i => i.id === id);
+      if (item) {
+        // Extract price without euro sign
+        const priceStr = item.price.replace('€ ', '').trim();
+        document.getElementById('edit-price-input').value = priceStr;
+      }
+    });
+    
+    if (currentImage) {
+      document.getElementById('edit-image-preview').src = currentImage;
+      document.getElementById('edit-image-preview').style.display = 'block';
+    } else {
+      document.getElementById('edit-image-preview').style.display = 'none';
+    }
+    
+    document.getElementById('edit-search-results').innerHTML = '';
+  }
+
+  function cancelEdit() {
+    currentEditItem = null;
+    document.getElementById('edit-item-form').style.display = 'none';
+    document.getElementById('edit-search-input').value = '';
+    document.getElementById('edit-search-results').innerHTML = '';
+  }
+
+  async function updateItemPrice() {
+    if (!currentEditItem) return;
+    
+    const priceInput = document.getElementById('edit-price-input').value.trim();
+    if (!priceInput) {
+      alert('Please enter a price');
+      return;
+    }
+    
+    const newPrice = '€ ' + priceInput;
+    
+    await fetch('/api/menu/update-price', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: currentEditItem, price: newPrice })
+    });
+    
+    alert('Price updated successfully!');
+    cancelEdit();
+    loadMenu();
+  }
+
+  async function deleteItem() {
+    if (!currentEditItem) return;
+    
+    const itemName = document.getElementById('edit-item-name').innerText.replace('Editing: ', '');
+    const confirmDelete = confirm(`Are you sure you want to DELETE "${itemName}"?\n\nThis action cannot be undone!`);
+    
+    if (confirmDelete) {
+      await fetch('/api/menu/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentEditItem })
+      });
+      
+      alert('Item deleted successfully!');
+      cancelEdit();
+      loadMenu();
+    }
+  }
+
+  async function saveEditedItem() {
+    if (!currentEditItem) return;
+    
+    let imagePath = '';
+    const fileInput = document.getElementById('edit-image-file');
+    
+    if (fileInput.files.length > 0) {
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+      const uploadRes = await fetch('/api/menu/upload-image', {
+        method: 'POST',
+        body: formData
+      });
+      if (uploadRes.ok) {
+        const uploadData = await uploadRes.json();
+        imagePath = uploadData.imagePath;
+      }
+    }
+    
+    if (imagePath) {
+      await fetch('/api/menu/update-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentEditItem, imagePath })
+      });
+      alert('Image added successfully!');
+      cancelEdit();
+      loadMenu();
+    } else {
+      alert('Please select an image to upload');
+    }
+  }
+
+  // Load Menu for toggling - organized by category
+  async function loadMenu(tab = 'food') {
+    const res = await fetch('/api/menu');
+    const menu = await res.json();
+    const list = document.getElementById('menu-list');
+    list.innerHTML = '';
+
+    const tabItems = menu.filter(i => i.tab === tab);
+    const categories = [...new Set(tabItems.map(i => i.category))];
+    
+    categories.forEach(cat => {
+      const catDiv = document.createElement('div');
+      catDiv.style.marginBottom = '25px';
+      
+      const catTitle = document.createElement('h3');
+      catTitle.style.cssText = 'color: var(--gold); border-bottom: 1px solid rgba(139,90,43,0.2); padding-bottom: 8px; margin-bottom: 15px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;';
+      catTitle.innerText = cat;
+      catDiv.appendChild(catTitle);
+      
+      tabItems.filter(i => i.category === cat).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'menu-item';
+        div.innerHTML = `
+          <div class="item-info">
+            <strong>${item.name}</strong> <span>${item.price}</span><br>
+            <span style="margin-left:0; font-size:10px; text-transform:uppercase;">${item.category}</span>
+            ${item.image ? '<span style="margin-left:10px; font-size:10px; color:#4CAF82;">📷 Image</span>' : ''}
+          </div>
+          <label class="switch">
+            <input type="checkbox" ${item.available ? 'checked' : ''} onchange="toggleItem('${item.id}')">
+            <span class="slider"></span>
+          </label>
+        `;
+        catDiv.appendChild(div);
+      });
+      list.appendChild(catDiv);
+    });
+  }
+
+  async function toggleItem(id) {
+    await fetch('/api/menu/toggle', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+    });
+  }
+
+  // Add Item with Duplicate Prevention
+  document.getElementById('addForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const name = document.getElementById('f-name').value.trim();
+    const category = document.getElementById('f-cat').value;
+    const tab = document.getElementById('f-tab').value;
+    
+    // Check for duplicates
+    const res = await fetch('/api/menu');
+    const menu = await res.json();
+    const duplicate = menu.find(item => 
+      item.name.toLowerCase() === name.toLowerCase() && 
+      item.category === category
+    );
+    
+    if (duplicate) {
+      const confirmAdd = confirm(`"${name}" already exists in ${category}!\n\nWould you like to edit this existing item instead and add an image to it?\n\nClick OK to go to Edit Item, or Cancel to add anyway.`);
+      if (confirmAdd) {
+        switchTab('edit');
+        document.getElementById('edit-search-input').value = name;
+        document.getElementById('edit-search-input').dispatchEvent(new Event('input'));
+        return;
+      }
+    }
+    
+    let imagePath = '';
+    const fileInput = document.getElementById('f-image');
+    if (fileInput.files.length > 0) {
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+      const uploadRes = await fetch('/api/menu/upload-image', {
+        method: 'POST',
+        body: formData
+      });
+      if (uploadRes.ok) {
+        const uploadData = await uploadRes.json();
+        imagePath = uploadData.imagePath;
+      }
+    }
+    
+    const newItem = {
+      tab: tab,
+      category: category,
+      name: name,
+      price: '€ ' + document.getElementById('f-price').value,
+      desc: document.getElementById('f-desc').value,
+      image: imagePath
+    };
+    await fetch('/api/menu/add', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newItem)
+    });
+    alert('Item added successfully!');
+    document.getElementById('addForm').reset();
+    document.getElementById('f-image-preview').style.display = 'none';
+    loadMenu();
+    switchTab('manage');
+  });
+
+  loadQr();
+  loadMenu('food');
+  // Highlight first manage tab
+  document.querySelectorAll('#manage-tabs .tab-btn')[0].style.borderBottomColor = 'var(--gold)';
+</script>
+</body>
+</html>

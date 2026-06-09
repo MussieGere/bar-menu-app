@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Menu — Ai Paladini Cafe</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Montserrat:wght@400;500;600&display=swap');
+
+  :root {
+    --gold: #8B5A2B; --dark: #F4F1EA; --text: #1A1714; --text-dim: #4A4641; --muted: #66605B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--dark); color: var(--text); font-family: 'Montserrat', sans-serif; min-height: 100vh; overflow-x: hidden; user-select: none; }
+  
+  .gate { display: none; position: fixed; inset: 0; background: var(--dark); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px; }
+  .gate.active { display: flex; }
+  .gate-icon { font-size: 48px; margin-bottom: 24px; color: var(--gold); }
+  .gate h2 { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 600; margin-bottom: 16px; }
+
+  .session-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 500; background: rgba(244, 241, 234, 0.95); border-bottom: 1px solid rgba(139,90,43,0.15); padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .session-label { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted); font-weight:600;}
+  .timer-track { flex: 1; height: 3px; background: rgba(0,0,0,0.05); border-radius: 2px; overflow: hidden; }
+  .timer-fill { height: 100%; width: 100%; background: #4CAF82; transition: width 1s linear; }
+  .timer-text { font-size: 11px; font-weight:600; color: var(--text-dim); }
+
+  .hero { padding-top: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding-bottom: 30px; }
+  
+  .nav-tabs { position: sticky; top: 40px; z-index: 400; background: rgba(244, 241, 234, 0.97); border-bottom: 1px solid rgba(139,90,43,0.2); display: flex; overflow-x: auto; padding: 0 8px; scrollbar-width: none; }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn { background: transparent; border: none; color: var(--muted); padding: 16px 20px; font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight:600; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .menu-section { display: none; padding: 20px 24px 80px; max-width: 740px; margin: 0 auto; }
+  .menu-section.active { display: block; animation: sectionFade 0.4s ease; }
+  @keyframes sectionFade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  .category-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; margin-top: 40px; border-bottom: 1px solid rgba(139,90,43,0.2); padding-bottom:10px; }
+  .menu-item { border-bottom: 1px solid rgba(0,0,0,0.05); padding: 20px 0; display: grid; grid-template-columns: 1fr auto; gap: 8px 24px; }
+  .item-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--text); }
+  .item-price { font-size: 16px; font-weight: 600; color: var(--gold); font-family: 'Montserrat', sans-serif; }
+  .item-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; grid-column: 1 / -1; }
+  .item-image { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; }
+
+/* --- WINE MENU SPECIAL STYLING --- */
+  
+  .wine-section { 
+    /* This applies your exact PDF background */
+    background-image: url('/images/pdf-background.jpg'); 
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    
+    /* Fallback bordeaux color just in case the image loads slowly */
+    background-color: #4A0E17; 
+    min-height: 100vh;
+  }
+  
+  .wine-section .menu-section { padding: 10px 24px 80px; }
+  
+  .wine-section .wine-main-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 600;
+    color: #D4AF37; /* Elegant Gold */
+    text-align: center;
+    margin: 50px 0 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    padding-bottom: 10px;
+  }
+  
+  .wine-section .wine-sub-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #F4F1EA; /* Light Cream */
+    text-align: center;
+    margin: 30px 0 20px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+  }
+
+  .wine-section .menu-item { 
+    border-bottom: 1px dashed rgba(244, 241, 234, 0.2);
+    padding: 16px 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 16px;
+    align-items: flex-start;
+  }
+  
+  .wine-section .item-name { 
+    color: #FFFFFF; /* White for readability */
+    font-size: 20px; 
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .wine-section .item-desc { 
+    color: rgba(244, 241, 234, 0.8);
+    font-size: 13px;
+    font-style: italic;
+    line-height: 1.5;
+    grid-column: 1 / -1;
+  }
+  
+  .wine-section .item-price { 
+    color: #D4AF37; /* Elegant Gold */
+    font-size: 18px; 
+    font-weight: 700;
+  }
+
+  /* BIO Indicator Styling */
+  .bio-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    color: #4CAF82;
+    border: 1px solid #4CAF82;
+    padding: 2px 6px;
+    border-radius: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 640px) {
+    .wine-section .wine-main-title { font-size: 26px; }
+    .wine-section .item-name { font-size: 18px; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate-expired">
+  <div class="gate-icon">⧖</div>
+  <h2>Session <em style="color:var(--gold)">Expired</em></h2>
+  <p>Your access has timed out. Please scan the QR code on your table again.</p>
+</div>
+
+<div class="gate" id="gate-invalid">
+  <div class="gate-icon">✦</div>
+  <h2>Access <em style="color:var(--gold)">Restricted</em></h2>
+  <p>Please scan the table QR code to access the menu. Reloading is disabled.</p>
+</div>
+
+<div class="session-bar" id="session-bar">
+  <span class="session-label">Session</span>
+  <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
+  <span class="timer-text" id="timer-text">–:––</span>
+</div>
+
+<header class="hero" id="main-content">
+  <img src="/logo.jpg" alt="Ai Paladini Logo" style="height: 220px; margin-bottom: 10px; mix-blend-mode: multiply;" onerror="this.style.display='none'">
+  <p id="subtitle" style="font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--gold); font-weight: 600; text-align: center;">Taormina, Sicily</p>
+</header>
+
+<nav class="nav-tabs" id="nav-container" style="display:none;">
+  <button class="tab-btn active" onclick="showTab('food', this)">Food & Pizze</button>
+  <button class="tab-btn" onclick="showTab('drinks', this)">Bar & Caffe</button>
+  <button class="tab-btn" onclick="showTab('restaurant', this)">Ristorante</button>
+  <button class="tab-btn" onclick="showTab('wine', this)" id="wine-tab" style="display:none;">Wine List</button>
+  <button class="tab-btn" onclick="showTab('desserts', this)" id="desserts-tab" style="display:none;">Desserts</button>
+</nav>
+
+<div id="dynamic-menu-container"></div>
+
+<script>
+  // RELOAD PROTECTION
+  const navEntries = performance.getEntriesByType("navigation");
+  if (navEntries.length > 0 && navEntries[0].type === "reload") {
+    document.getElementById('gate-invalid').classList.add('active');
+    document.getElementById('main-content').style.display = 'none';
+    window.history.replaceState({}, document.title, window.location.pathname);
+    throw new Error("Reloaded");
+  }
+
+  function getToken() { return new URLSearchParams(window.location.search).get('token'); }
+  function getMenuType() { return new URLSearchParams(window.location.search).get('menu') || 'main'; }
+
+  let sessionExpiry = null;
+  let timerInterval = null;
+
+  async function initSession() {
+    const token = getToken();
+    if (!token) return document.getElementById('gate-invalid').classList.add('active');
+
+    const res = await fetch(`/api/session?token=${token}`);
+    const data = await res.json();
+    
+    if (!data.valid) {
+      document.getElementById('main-content').style.display = 'none';
+      return document.getElementById('gate-expired').classList.add('active');
+    }
+
+    sessionExpiry = data.expiry;
+    document.getElementById('nav-container').style.display = 'flex';
+    fetchMenu();
+    startTimer();
+  }
+
+  async function fetchMenu() {
+    const res = await fetch('/api/menu');
+    const menuData = await res.json();
+    const container = document.getElementById('dynamic-menu-container');
+    container.innerHTML = '';
+    
+    const menuType = getMenuType();
+    let tabs = ['food', 'drinks', 'restaurant'];
+    let firstTab = 'food';
+    
+    if (menuType === 'wine') {
+      tabs = ['wine'];
+      firstTab = 'wine';
+      document.getElementById('wine-tab').style.display = 'block';
+      document.getElementById('desserts-tab').style.display = 'none';
+      document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+        if (idx < 3) btn.style.display = 'none';
+      });
+      container.classList.add('wine-section');
+      
+      // Update Hero Title for Wine Menu
+      document.getElementById('subtitle').innerHTML = 'CARTA DEI VINI<br><span style="font-size: 10px; letter-spacing: 5px; color: var(--gold); display: block; margin-top: 5px;">Taormina, Sicily</span>';
+    } else if (menuType === 'desserts') {
+      tabs = ['desserts'];
+      firstTab = 'desserts';
+      document.getElementById('desserts-tab').style.display = 'block';
+      document.getElementById('wine-tab').style.display = 'none';
+      document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+        if (idx < 3) btn.style.display = 'none';
+      });
+    }
+    
+    tabs.forEach(tab => {
+      const section = document.createElement('section');
+      section.className = `menu-section ${tab === firstTab ? 'active' : ''}`;
+      section.id = `section-${tab}`;
+      
+      const tabItems = menuData.filter(i => i.tab === tab && i.available);
+      let html = '';
+      
+      if (tab === 'wine') {
+        // --- CUSTOM WINE MENU RENDERING ---
+        // Group by Main Category (e.g., "I Vini dell'Etna")
+        const mainCats = [...new Set(tabItems.map(i => i.category.split(' - ')[0]))];
+        
+        mainCats.forEach(mainCat => {
+          html += `<div class="wine-main-title">${mainCat}</div>`;
+          
+          // Get subcategories for this main category (e.g., "Bianchi", "Rosati")
+          const subCats = [...new Set(tabItems.filter(i => i.category.startsWith(mainCat)).map(i => i.category.split(' - ')[1] || ''))];
+          
+          subCats.forEach(subCat => {
+            if (subCat) html += `<div class="wine-sub-title">${subCat}</div>`;
+            
+            const targetCategory = subCat ? `${mainCat} - ${subCat}` : mainCat;
+            tabItems.filter(i => i.category === targetCategory).forEach(item => {
+              
+              // Process BIO logic
+              const isBio = item.name.includes('BIO') || (item.desc && item.desc.includes('BIO'));
+              const bioIndicator = isBio ? '<span class="bio-badge">🍃 BIO</span>' : '';
+              
+              // Clean "BIO" from text so it doesn't duplicate the logo
+              let cleanName = item.name.replace(/\bBIO\b/g, '').trim();
+              let cleanDesc = item.desc ? item.desc.replace(/\bBIO\b/g, '').trim() : '';
+
+              html += `
+                <div class="menu-item">
+                  <div class="item-name">${cleanName} ${bioIndicator}</div>
+                  <div class="item-price">${item.price}</div>
+                  ${cleanDesc ? `<div class="item-desc">${cleanDesc}</div>` : ''}
+                </div>
+              `;
+            });
+          });
+        });
+      } else {
+        // --- STANDARD MENU RENDERING ---
+        const categories = [...new Set(tabItems.map(i => i.category))];
+        categories.forEach(cat => {
+          html += `<div class="category-title">${cat}</div>`;
+          tabItems.filter(i => i.category === cat).forEach(item => {
+            html += `
+              <div class="menu-item">
+                ${item.image ? `<img src="${item.image}" alt="${item.name}" class="item-image">` : ''}
+                <div class="item-name">${item.name}</div>
+                <div class="item-price">${item.price}</div>
+                ${item.desc ? `<div class="item-desc">${item.desc}</div>` : ''}
+              </div>
+            `;
+          });
+        });
+      }
+      
+      section.innerHTML = html;
+      container.appendChild(section);
+    });
+  }
+
+  function showTab(name, btn) {
+    document.querySelectorAll('.menu-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function startTimer() {
+    timerInterval = setInterval(() => {
+      const remaining = sessionExpiry - Date.now();
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        document.querySelectorAll('.menu-section').forEach(s => s.style.display = 'none');
+        document.getElementById('nav-container').style.display = 'none';
+        document.getElementById('session-bar').style.display = 'none';
+        document.getElementById('gate-expired').classList.add('active');
+        return;
+      }
+      const mins = Math.floor(remaining / 60000);
+      const secs = Math.floor((remaining % 60000) / 1000);
+      document.getElementById('timer-text').textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+      document.getElementById('timer-fill').style.width = Math.max(0, (remaining / (30*60*1000)) * 100) + '%';
+    }, 1000);
+  }
+
+  window.addEventListener('blur', () => document.body.style.filter = 'blur(20px)');
+  window.addEventListener('focus', () => document.body.style.filter = '');
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  initSession();
+</script>
+</body>
+</html>
