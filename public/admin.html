@@ -142,31 +142,7 @@ input:checked + .slider:before { transform: translateX(26px); }
     <div class="form-group">
       <label>Category</label>
       <select id="f-cat" required>
-        <option value="">-- Select Category --</option>
-        <optgroup label="Food & Pizze">
-          <option value="Burger / Burgers">Burger / Burgers</option>
-          <option value="Panini / Sandwiches">Panini / Sandwiches</option>
-          <option value="Pizze / Pizzas">Pizze / Pizzas</option>
-        </optgroup>
-        <optgroup label="Bar & Caffetteria">
-          <option value="Birre / Beers">Birre / Beers</option>
-          <option value="Vini / Wine">Vini / Wine</option>
-          <option value="Liquori / Liquors">Liquori / Liquors</option>
-          <option value="Aperitivi / Long drink">Aperitivi / Long drink</option>
-          <option value="Bevande / Soft drink">Bevande / Soft drink</option>
-        </optgroup>
-        <optgroup label="Ristorante">
-          <option value="Antipasti / Starters">Antipasti / Starters</option>
-          <option value="Primi Piatti / First Courses">Primi Piatti / First Courses</option>
-          <option value="Secondi Piatti / Main Courses">Secondi Piatti / Main Courses</option>
-        </optgroup>
-        <optgroup label="Wine & Desserts">
-          <option value="Vini Bianchi / White Wine">Vini Bianchi / White Wine</option>
-          <option value="Vini Rossi / Red Wine">Vini Rossi / Red Wine</option>
-          <option value="Vini Rosati / Rosé Wine">Vini Rosati / Rosé Wine</option>
-          <option value="Spumanti / Sparkling">Spumanti / Sparkling</option>
-          <option value="Dessert / Dolci">Dessert / Dolci</option>
-        </optgroup>
+        <option value="">-- First Select a Section --</option>
       </select>
     </div>
     <div class="form-group">
@@ -511,6 +487,63 @@ input:checked + .slider:before { transform: translateX(26px); }
     switchTab('manage');
   });
 
+  // --- DYNAMIC CATEGORY DROPDOWN LOGIC ---
+  const categoryMapping = {
+    'food': [
+      'Burger / Burgers', 
+      'Panini / Sandwiches', 
+      'Pizze / Pizzas'
+    ],
+    'drinks': [
+      'Birre / Beers', 
+      'Vini / Wine', 
+      'Liquori / Liquors', 
+      'Aperitivi / Long drink', 
+      'Bevande / Soft drink'
+    ],
+    'restaurant': [
+      'Antipasti / Starters', 
+      'Primi Piatti / First Courses', 
+      'Secondi Piatti / Main Courses'
+    ],
+    'wine': [
+      'Bollicine / Sparkling Wine',
+      'I Vini dell\'Etna - Bianchi',
+      'I Vini dell\'Etna - Rosati',
+      'I Vini dell\'Etna - Rossi',
+      'Vini Siciliani - Bianchi',
+      'Vini Siciliani - Rosati',
+      'Vini Siciliani - Rossi',
+      'Vini Italiani',
+      'Vini Mossi / Sparkling Wine'
+    ],
+    'desserts': [
+      'Colazione / Breakfast', 
+      'Gelateria / Ice cream'
+    ]
+  };
+
+  document.getElementById('f-tab').addEventListener('change', function() {
+    const selectedSection = this.value;
+    const catSelect = document.getElementById('f-cat');
+    
+    // Clear current options
+    catSelect.innerHTML = '<option value="">-- Select Category --</option>';
+    
+    // Populate new options
+    if (categoryMapping[selectedSection]) {
+      categoryMapping[selectedSection].forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        catSelect.appendChild(option);
+      });
+    }
+  });
+
+  // Trigger it once on load so it sets up the initial "Food" categories
+  document.getElementById('f-tab').dispatchEvent(new Event('change'));
+  
   loadQr();
   loadMenu('food');
   // Highlight first manage tab
