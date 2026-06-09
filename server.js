@@ -1,45 +1,44 @@
+require('dotenv').config();
 const express = require('express');
 const crypto = require('crypto');
 const path = require('path');
 const QRCode = require('qrcode');
 const multer = require('multer');
 const fs = require('fs');
+const mongoose = require('mongoose');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SECRET = 'ai-paladini-secret-2026';
+const MONGODB_URI = process.env.MONGODB_URI; 
 
-// Ensure images directory exists
-const imagesDir = path.join(__dirname, 'public', 'images');
-if (!fs.existsSync(imagesDir)) {
-  fs.mkdirSync(imagesDir, { recursive: true });
+// --- MONGODB CONNECTION ---
+if (!MONGODB_URI) {
+  console.error("FATAL ERROR: MONGODB_URI is not defined.");
+  process.exit(1);
 }
 
-// Configure multer for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, imagesDir),
-  filename: (req, file, cb) => {
-    const uniqueName = `${crypto.randomBytes(4).toString('hex')}-${Date.now()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  }
-});
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => {
-  const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
-  cb(null, allowedMimes.includes(file.mimetype));
-}});
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('✦ Connected to MongoDB Atlas'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Prevent caching
-app.use((req, res, next) => {
-  res.set({ 'Cache-Control': 'no-store, no-cache', 'Pragma': 'no-cache' });
-  next();
+// --- MONGOOSE SCHEMA & MODEL ---
+const menuItemSchema = new mongoose.Schema({
+  id: String,
+  tab: String,
+  category: String,
+  name: String,
+  price: String,
+  desc: String,
+  available: Boolean,
+  image: String
 });
 
-// --- MENU DATABASE (In-Memory) ---
-let menuDatabase = [
+const MenuItem = mongoose.model('MenuItem', menuItemSchema);
+
+// --- SEED DATABASE ON STARTUP ---
+// Paste your ENTIRE existing menuDatabase array here:
+const initialMenuDatabase = [
   // Burgers
   { id: '1', tab: 'food', category: 'Burger / Burgers', name: 'Hamburger', price: '€ 8,50', desc: "hamburger 200gr, pomodoro, insalata, olio d'oliva, origano", available: true },
   { id: '2', tab: 'food', category: 'Burger / Burgers', name: 'Cheeseburger', price: '€ 9,00', desc: "hamburger 200gr, formaggio cheddar, pomodoro, insalata, olio d'oliva, origano", available: true },
@@ -229,9 +228,48 @@ let menuDatabase = [
   { id: '166', tab: 'wine', category: 'Vini Mossi / Sparkling Wine', name: 'Rosè di Rosa IGP Milazzo', price: '€ 29,00', desc: "BIO Inzolia Rosa, Chardonnay, Vol 12%", available: true }
 ];
 
+async function seedDatabase() {
+  const count = await MenuItem.countDocuments();
+  if (count === 0) {
+    console.log("Database is empty. Seeding initial menu...");
+    await MenuItem.insertMany(initialMenuDatabase);
+    console.log("Seeding complete!");
+  }
+}
+seedDatabase();
+
+// Ensure images directory exists
+const imagesDir = path.join(__dirname, 'public', 'images');
+if (!fs.existsSync(imagesDir)) {
+  fs.mkdirSync(imagesDir, { recursive: true });
+}
+
+// Configure multer for image uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, imagesDir),
+  filename: (req, file, cb) => {
+    const uniqueName = `${crypto.randomBytes(4).toString('hex')}-${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => {
+  const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+  cb(null, allowedMimes.includes(file.mimetype));
+}});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Prevent caching
+app.use((req, res, next) => {
+  res.set({ 'Cache-Control': 'no-store, no-cache', 'Pragma': 'no-cache' });
+  next();
+});
+
 // --- SESSION LOGIC ---
 function generateToken() {
-  const expiry = Date.now() + 30 * 60 * 1000; // 30 minutes
+  const expiry = Date.now() + 30 * 60 * 1000;
   const payload = `${crypto.randomBytes(8).toString('hex')}.${expiry}`;
   const sig = crypto.createHmac('sha256', SECRET).update(payload).digest('hex').slice(0, 16);
   return `${payload}.${sig}`;
@@ -249,28 +287,88 @@ app.get('/api/session', (req, res) => {
   res.json({ valid: true, expiry });
 });
 
-// --- NEW: THE STATIC QR SCAN ROUTE ---
-// The physical QR code on the table points here. It generates a fresh session and redirects!
 app.get('/scan', (req, res) => {
   const token = generateToken();
-  const menu = req.query.menu || 'main'; // main, wine, or desserts
+  const menu = req.query.menu || 'main';
   res.redirect(`/menu.html?token=${token}&menu=${menu}`);
 });
 
-// --- MENU API ---
-app.get('/api/menu', (req, res) => res.json(menuDatabase));
+// --- DATABASE API ENDPOINTS ---
 
-app.post('/api/menu/toggle', (req, res) => {
-  const { id } = req.body;
-  const item = menuDatabase.find(i => i.id === id);
-  if (item) item.available = !item.available;
-  res.json({ success: true });
+app.get('/api/menu', async (req, res) => {
+  try {
+    const menu = await MenuItem.find({});
+    res.json(menu);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch menu' });
+  }
 });
 
-app.post('/api/menu/add', (req, res) => {
-  const newItem = { id: crypto.randomBytes(4).toString('hex'), ...req.body, available: true };
-  menuDatabase.push(newItem);
-  res.json({ success: true });
+app.post('/api/menu/toggle', async (req, res) => {
+  try {
+    const { id } = req.body;
+    const item = await MenuItem.findOne({ id });
+    if (item) {
+      item.available = !item.available;
+      await item.save();
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+app.post('/api/menu/add', async (req, res) => {
+  try {
+    const newItem = new MenuItem({ 
+      id: crypto.randomBytes(4).toString('hex'), 
+      ...req.body, 
+      available: true 
+    });
+    await newItem.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+app.post('/api/menu/upload-image', upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+  res.json({ success: true, imagePath: `/images/${req.file.filename}` });
+});
+
+app.post('/api/menu/update-image', async (req, res) => {
+  try {
+    const { id, imagePath } = req.body;
+    await MenuItem.findOneAndUpdate({ id }, { image: imagePath });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+app.post('/api/menu/update-price', async (req, res) => {
+  try {
+    const { id, price } = req.body;
+    await MenuItem.findOneAndUpdate({ id }, { price });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+app.post('/api/menu/delete', async (req, res) => {
+  try {
+    const { id } = req.body;
+    const result = await MenuItem.deleteOne({ id });
+    if (result.deletedCount > 0) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ success: false, message: 'Item not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
 });
 
 // --- ADMIN QR GENERATOR ---
@@ -292,59 +390,9 @@ app.get('/api/admin-qr-desserts', async (req, res) => {
   res.json({ scanUrl, qrDataUrl });
 });
 
-// --- IMAGE UPLOAD ENDPOINT ---
-app.post('/api/menu/upload-image', upload.single('image'), (req, res) => {
-  if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
-  res.json({ success: true, imagePath: `/images/${req.file.filename}` });
-});
-
-// --- UPDATE ITEM IMAGE ---
-app.post('/api/menu/update-image', (req, res) => {
-  const { id, imagePath } = req.body;
-  const item = menuDatabase.find(i => i.id === id);
-  if (item) {
-    item.image = imagePath;
-  }
-  res.json({ success: true });
-});
-
-// --- UPDATE ITEM PRICE ---
-app.post('/api/menu/update-price', (req, res) => {
-  const { id, price } = req.body;
-  const item = menuDatabase.find(i => i.id === id);
-  if (item) {
-    item.price = price;
-  }
-  res.json({ success: true });
-});
-
-// --- DELETE ITEM ---
-app.post('/api/menu/delete', (req, res) => {
-  const { id } = req.body;
-  const index = menuDatabase.findIndex(i => i.id === id);
-  if (index !== -1) {
-    menuDatabase.splice(index, 1);
-    res.json({ success: true });
-  } else {
-    res.status(404).json({ success: false, message: 'Item not found' });
-  }
-});
-
 // --- PAGE ROUTING ---
-
-// 1. If someone types the blank URL, redirect them to the admin panel
-app.get('/', (req, res) => {
-  res.redirect('/admin.html');
-});
-
-// 2. Allow them to just type /admin instead of /admin.html
-app.get('/admin', (req, res) => {
-  res.redirect('/admin.html');
-});
-
-// 3. Fallback for 404 errors
-app.use((req, res) => {
-  res.status(404).send('Page not found. Are you looking for /admin.html?');
-});
+app.get('/', (req, res) => res.redirect('/admin.html'));
+app.get('/admin', (req, res) => res.redirect('/admin.html'));
+app.use((req, res) => res.status(404).send('Page not found. Are you looking for /admin.html?'));
 
 app.listen(PORT, () => console.log(`\n✦ Ai Paladini Server running at http://localhost:${PORT}`));
