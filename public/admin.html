@@ -358,19 +358,25 @@ input:checked + .slider:before { transform: translateX(26px); }
     if (!currentEditItem) return;
     
     let imagePath = '';
-    const fileInput = document.getElementById('edit-image-file');
-    
+    const fileInput = document.getElementById('f-image');
     if (fileInput.files.length > 0) {
       const formData = new FormData();
       formData.append('image', fileInput.files[0]);
+      
       const uploadRes = await fetch('/api/menu/upload-image', {
         method: 'POST',
         body: formData
       });
-      if (uploadRes.ok) {
-        const uploadData = await uploadRes.json();
-        imagePath = uploadData.imagePath;
+      
+      // NEW: Catch backend upload errors instead of bypassing them
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json();
+        alert(`❌ Upload Failed: ${errorData.message || 'Check server logs'}`);
+        return; // STOP the form submission so it doesn't create an empty-image item
       }
+      
+      const uploadData = await uploadRes.json();
+      imagePath = uploadData.imagePath;
     }
     
     if (imagePath) {
@@ -467,10 +473,16 @@ input:checked + .slider:before { transform: translateX(26px); }
         method: 'POST',
         body: formData
       });
-      if (uploadRes.ok) {
-        const uploadData = await uploadRes.json();
-        imagePath = uploadData.imagePath;
+      
+      // NEW: Catch backend errors during item edits
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json();
+        alert(`❌ Upload Failed: ${errorData.message || 'Check server logs'}`);
+        return;
       }
+      
+      const uploadData = await uploadRes.json();
+      imagePath = uploadData.imagePath;
     }
     
     const newItem = {
