@@ -157,8 +157,12 @@ input:checked + .slider:before { transform: translateX(26px); }
       </div>
     </div>
     <div class="form-group">
-      <label>Description / Ingredients (Optional)</label>
-      <input type="text" id="f-desc">
+      <label>Description (Italian) - Optional</label>
+      <input type="text" id="f-desc-it">
+    </div>
+    <div class="form-group">
+      <label>Description (English) - Optional</label>
+      <input type="text" id="f-desc-en">
     </div>
     <div class="form-group">
       <label>Item Image (Optional - JPG, PNG, WebP up to 5MB)</label>
@@ -474,7 +478,8 @@ input:checked + .slider:before { transform: translateX(26px); }
       category: category,
       name: name,
       price: '€ ' + document.getElementById('f-price').value,
-      desc: document.getElementById('f-desc').value,
+      desc_it: document.getElementById('f-desc-it').value, // Captured IT
+      desc_en: document.getElementById('f-desc-en').value, // Captured EN
       image: imagePath
     };
     await fetch('/api/menu/add', {
