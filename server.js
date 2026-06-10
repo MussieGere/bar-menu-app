@@ -29,7 +29,9 @@ const menuItemSchema = new mongoose.Schema({
   category: String,
   name: String,
   price: String,
-  desc: String,
+  desc: String,    // Legacy fallback
+  desc_it: String, // NEW: Italian Description
+  desc_en: String, // NEW: English Description
   available: Boolean,
   image: String
 });
