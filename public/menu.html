@@ -183,7 +183,7 @@
 </nav>
 
 <div id="dynamic-menu-container"></div>
-
+  
 <script>
   // RELOAD PROTECTION
   const navEntries = performance.getEntriesByType("navigation");
@@ -239,7 +239,7 @@
   };
 
   let currentLang = 'en'; // Default language
-
+  
   function setLanguage(lang) {
     currentLang = lang;
     const t = i18n[lang];
@@ -254,7 +254,7 @@
       tabs[4].innerText = t.dessertsTab;
     }
 
-    // 2. Update Gates (Expired/Invalid)
+    // 2. Update Gates
     const expGate = document.getElementById('gate-expired');
     if(expGate) {
       expGate.querySelector('h2').innerHTML = `${t.sessionExp.split(' ')[0]} <em style="color:var(--gold)">${t.sessionExp.split(' ').slice(1).join(' ')}</em>`;
@@ -270,6 +270,9 @@
         subtitleElement.innerText = t.subtitle;
       }
     }
+    
+    // 4. RE-RENDER THE MENU TO UPDATE DESCRIPTIONS
+    fetchMenu(); 
   }
 
   function getToken() { return new URLSearchParams(window.location.search).get('token'); }
@@ -278,7 +281,7 @@
   let sessionExpiry = null;
   let timerInterval = null;
 
-async function initSession() {
+  async function initSession() {
     const token = getToken();
     if (!token) return document.getElementById('gate-invalid').classList.add('active');
 
@@ -349,13 +352,10 @@ async function initSession() {
       
       if (tab === 'wine') {
         // --- CUSTOM WINE MENU RENDERING ---
-        // Group by Main Category (e.g., "I Vini dell'Etna")
         const mainCats = [...new Set(tabItems.map(i => i.category.split(' - ')[0]))];
         
         mainCats.forEach(mainCat => {
           html += `<div class="wine-main-title">${mainCat}</div>`;
-          
-          // Get subcategories for this main category (e.g., "Bianchi", "Rosati")
           const subCats = [...new Set(tabItems.filter(i => i.category.startsWith(mainCat)).map(i => i.category.split(' - ')[1] || ''))];
           
           subCats.forEach(subCat => {
@@ -364,13 +364,29 @@ async function initSession() {
             const targetCategory = subCat ? `${mainCat} - ${subCat}` : mainCat;
             tabItems.filter(i => i.category === targetCategory).forEach(item => {
               
-              // Process BIO logic
-              const isBio = item.name.includes('BIO') || (item.desc && item.desc.includes('BIO'));
+              // 1. Language Selection Logic for Wine Descriptions
+              let selectedDesc = '';
+              if (currentLang === 'it' && item.desc_it) {
+                selectedDesc = item.desc_it;
+              } else if (currentLang !== 'it' && item.desc_en) {
+                selectedDesc = item.desc_en; 
+              } else if (item.desc_it) {
+                selectedDesc = item.desc_it; 
+              } else {
+                selectedDesc = item.desc || ''; 
+              }
+
+              // 2. Process BIO logic across all fields
+              const isBio = item.name.includes('BIO') || 
+                            (item.desc && item.desc.includes('BIO')) || 
+                            (item.desc_it && item.desc_it.includes('BIO')) || 
+                            (item.desc_en && item.desc_en.includes('BIO'));
+                            
               const bioIndicator = isBio ? '<span class="bio-badge">🍃 BIO</span>' : '';
               
-              // Clean "BIO" from text so it doesn't duplicate the logo
+              // 3. Clean string cleanups to remove text duplicates of the badge
               let cleanName = item.name.replace(/\bBIO\b/g, '').trim();
-              let cleanDesc = item.desc ? item.desc.replace(/\bBIO\b/g, '').trim() : '';
+              let cleanDesc = selectedDesc.replace(/\bBIO\b/g, '').trim();
 
               html += `
                 <div class="menu-item">
@@ -388,12 +404,25 @@ async function initSession() {
         categories.forEach(cat => {
           html += `<div class="category-title">${cat}</div>`;
           tabItems.filter(i => i.category === cat).forEach(item => {
+            
+            // Language Selection Logic for Standard Descriptions
+            let selectedDesc = '';
+            if (currentLang === 'it' && item.desc_it) {
+              selectedDesc = item.desc_it;
+            } else if (currentLang !== 'it' && item.desc_en) {
+              selectedDesc = item.desc_en; 
+            } else if (item.desc_it) {
+              selectedDesc = item.desc_it; 
+            } else {
+              selectedDesc = item.desc || ''; 
+            }
+
             html += `
               <div class="menu-item">
                 ${item.image ? `<img src="${item.image}" alt="${item.name}" class="item-image">` : ''}
                 <div class="item-name">${item.name}</div>
                 <div class="item-price">${item.price}</div>
-                ${item.desc ? `<div class="item-desc">${item.desc}</div>` : ''}
+                ${selectedDesc ? `<div class="item-desc">${selectedDesc}</div>` : ''}
               </div>
             `;
           });
