@@ -334,9 +334,33 @@ app.post('/api/menu/add', async (req, res) => {
   }
 });
 
-app.post('/api/menu/upload-image', upload.single('image'), (req, res) => {
+const cloudinary = require('cloudinary').v2;
+
+// Configure Cloudinary (You will get these keys in Step 3)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET
+});
+
+app.post('/api/menu/upload-image', upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
-  res.json({ success: true, imagePath: `/images/${req.file.filename}` });
+  
+  try {
+    // Upload the file from the temporary local folder to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'ai-paladini-menu'
+    });
+    
+    // Delete the temporary local file after uploading to cloud
+    fs.unlinkSync(req.file.path);
+    
+    // Return the PERMANENT Cloudinary URL to save in your Database
+    res.json({ success: true, imagePath: result.secure_url });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Cloud upload failed' });
+  }
 });
 
 app.post('/api/menu/update-image', async (req, res) => {
