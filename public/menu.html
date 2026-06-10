@@ -154,9 +154,19 @@
 </div>
 
 <div class="session-bar" id="session-bar">
-  <span class="session-label">Session</span>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <span class="session-label">Session</span>
+    <span class="timer-text" id="timer-text" style="min-width: 35px;">–:––</span>
+  </div>
+  
   <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
-  <span class="timer-text" id="timer-text">–:––</span>
+  
+  <select id="lang-switcher" onchange="setLanguage(this.value)" style="background: transparent; border: 1px solid rgba(139,90,43,0.3); color: var(--gold); font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; cursor: pointer; outline: none;">
+    <option value="en">EN</option>
+    <option value="it">IT</option>
+    <option value="de">DE</option>
+    <option value="fr">FR</option>
+  </select>
 </div>
 
 <header class="hero" id="main-content">
