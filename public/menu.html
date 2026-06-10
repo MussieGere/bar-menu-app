@@ -194,13 +194,91 @@
     throw new Error("Reloaded");
   }
 
+  // --- i18n TRANSLATION DICTIONARY ---
+  const i18n = {
+    en: {
+      foodTab: "Food & Pizze",
+      drinksTab: "Bar & Caffe",
+      restTab: "Ristorante",
+      wineTab: "Wine List",
+      dessertsTab: "Desserts",
+      sessionExp: "Session Expired",
+      sessionExpDesc: "Your access has timed out. Please scan the QR code on your table again.",
+      subtitle: "Taormina, Sicily"
+    },
+    it: {
+      foodTab: "Cibo e Pizze",
+      drinksTab: "Bar e Caffetteria",
+      restTab: "Ristorante",
+      wineTab: "Carta dei Vini",
+      dessertsTab: "Dolci",
+      sessionExp: "Sessione Scaduta",
+      sessionExpDesc: "Il tuo accesso è scaduto. Scansiona nuovamente il QR code al tuo tavolo.",
+      subtitle: "Taormina, Sicilia"
+    },
+    de: {
+      foodTab: "Essen & Pizzen",
+      drinksTab: "Bar & Café",
+      restTab: "Restaurant",
+      wineTab: "Weinkarte",
+      dessertsTab: "Nachspeisen",
+      sessionExp: "Sitzung Abgelaufen",
+      sessionExpDesc: "Ihr Zugriff ist abgelaufen. Bitte scannen Sie den QR-Code auf Ihrem Tisch erneut.",
+      subtitle: "Taormina, Sizilien"
+    },
+    fr: {
+      foodTab: "Nourriture & Pizzas",
+      drinksTab: "Bar & Café",
+      restTab: "Restaurant",
+      wineTab: "Carte des Vins",
+      dessertsTab: "Desserts",
+      sessionExp: "Session Expirée",
+      sessionExpDesc: "Votre accès a expiré. Veuillez scanner à nouveau le code QR sur votre table.",
+      subtitle: "Taormina, Sicile"
+    }
+  };
+
+  let currentLang = 'en'; // Default language
+
+  function setLanguage(lang) {
+    currentLang = lang;
+    const t = i18n[lang];
+
+    // 1. Update Tabs
+    const tabs = document.querySelectorAll('.tab-btn');
+    if(tabs.length >= 5) {
+      tabs[0].innerText = t.foodTab;
+      tabs[1].innerText = t.drinksTab;
+      tabs[2].innerText = t.restTab;
+      tabs[3].innerText = t.wineTab;
+      tabs[4].innerText = t.dessertsTab;
+    }
+
+    // 2. Update Gates (Expired/Invalid)
+    const expGate = document.getElementById('gate-expired');
+    if(expGate) {
+      expGate.querySelector('h2').innerHTML = `${t.sessionExp.split(' ')[0]} <em style="color:var(--gold)">${t.sessionExp.split(' ').slice(1).join(' ')}</em>`;
+      expGate.querySelector('p').innerText = t.sessionExpDesc;
+    }
+
+    // 3. Update Subtitle
+    const subtitleElement = document.getElementById('subtitle');
+    if(subtitleElement) {
+      if(getMenuType() === 'wine') {
+        subtitleElement.innerHTML = `${t.wineTab.toUpperCase()}<br><span style="font-size: 10px; letter-spacing: 5px; color: var(--gold); display: block; margin-top: 5px;">${t.subtitle}</span>`;
+      } else {
+        subtitleElement.innerText = t.subtitle;
+      }
+    }
+  }
+
   function getToken() { return new URLSearchParams(window.location.search).get('token'); }
   function getMenuType() { return new URLSearchParams(window.location.search).get('menu') || 'main'; }
 
   let sessionExpiry = null;
   let timerInterval = null;
 
-  async function initSession() {
+async function initSession() {
     const token = getToken();
     if (!token) return document.getElementById('gate-invalid').classList.add('active');
 
@@ -214,6 +292,17 @@
 
     sessionExpiry = data.expiry;
     document.getElementById('nav-container').style.display = 'flex';
+    
+    // Auto-detect browser language
+    const userLang = navigator.language || navigator.userLanguage;
+    const langCode = userLang.split('-')[0]; // gets 'en', 'it', 'de', etc.
+    if(i18n[langCode]) {
+      document.getElementById('lang-switcher').value = langCode;
+      setLanguage(langCode);
+    } else {
+      setLanguage('en');
+    }
+
     fetchMenu();
     startTimer();
   }
@@ -237,7 +326,7 @@
         if (idx < 3) btn.style.display = 'none';
       });
       container.classList.add('wine-section');
-      
+
       // Update Hero Title for Wine Menu
       document.getElementById('subtitle').innerHTML = 'CARTA DEI VINI<br><span style="font-size: 10px; letter-spacing: 5px; color: var(--gold); display: block; margin-top: 5px;">Taormina, Sicily</span>';
     } else if (menuType === 'desserts') {
