@@ -359,7 +359,7 @@ app.get('/api/menu', async (req, res) => {
   }
 });
 
-app.post('/api/menu/toggle', async (req, res) => {
+app.post('/api/menu/toggle', requireApiAdmin, async (req, res) => {
   try {
     const { id } = req.body;
     const item = await MenuItem.findOne({ id });
@@ -373,7 +373,7 @@ app.post('/api/menu/toggle', async (req, res) => {
   }
 });
 
-app.post('/api/menu/add', async (req, res) => {
+app.post('/api/menu/add', requireApiAdmin, async (req, res) => {
   try {
     const newItem = new MenuItem({ 
       id: crypto.randomBytes(4).toString('hex'), 
@@ -396,7 +396,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_SECRET
 });
 
-app.post('/api/menu/upload-image', upload.single('image'), async (req, res) => {
+app.post('/api/menu/upload-image', requireApiAdmin, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
   
   try {
@@ -416,7 +416,7 @@ app.post('/api/menu/upload-image', upload.single('image'), async (req, res) => {
   }
 });
 
-app.post('/api/menu/update-image', async (req, res) => {
+app.post('/api/menu/update-image', requireApiAdmin, async (req, res) => {
   try {
     const { id, imagePath } = req.body;
     await MenuItem.findOneAndUpdate({ id }, { image: imagePath });
@@ -426,7 +426,7 @@ app.post('/api/menu/update-image', async (req, res) => {
   }
 });
 
-app.post('/api/menu/update-price', async (req, res) => {
+app.post('/api/menu/update-price', requireApiAdmin, async (req, res) => {
   try {
     const { id, price } = req.body;
     await MenuItem.findOneAndUpdate({ id }, { price });
@@ -436,7 +436,7 @@ app.post('/api/menu/update-price', async (req, res) => {
   }
 });
 
-app.post('/api/menu/delete', async (req, res) => {
+app.post('/api/menu/delete', requireApiAdmin, async (req, res) => {
   try {
     const { id } = req.body;
     const result = await MenuItem.deleteOne({ id });
@@ -451,19 +451,19 @@ app.post('/api/menu/delete', async (req, res) => {
 });
 
 // --- ADMIN QR GENERATOR ---
-app.get('/api/admin-qr', async (req, res) => {
+app.get('/api/admin-qr', requireApiAdmin, async (req, res) => {
   const scanUrl = `${req.protocol}://${req.get('host')}/scan?menu=main`;
   const qrDataUrl = await QRCode.toDataURL(scanUrl, { color: { dark: '#0C0A08', light: '#ffffff' } });
   res.json({ scanUrl, qrDataUrl });
 });
 
-app.get('/api/admin-qr-wine', async (req, res) => {
+app.get('/api/admin-qr-wine', requireApiAdmin, async (req, res) => {
   const scanUrl = `${req.protocol}://${req.get('host')}/scan?menu=wine`;
   const qrDataUrl = await QRCode.toDataURL(scanUrl, { color: { dark: '#8B3A3A', light: '#ffffff' } });
   res.json({ scanUrl, qrDataUrl });
 });
 
-app.get('/api/admin-qr-desserts', async (req, res) => {
+app.get('/api/admin-qr-desserts', requireApiAdmin, async (req, res) => {
   const scanUrl = `${req.protocol}://${req.get('host')}/scan?menu=desserts`;
   const qrDataUrl = await QRCode.toDataURL(scanUrl, { color: { dark: '#8B5A2B', light: '#fffacd' } });
   res.json({ scanUrl, qrDataUrl });
