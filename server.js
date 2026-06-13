@@ -31,11 +31,12 @@ const menuItemSchema = new mongoose.Schema({
   category: String,
   name: String,
   price: String,
-  desc: String,    // Legacy fallback
-  desc_it: String, // NEW: Italian Description
-  desc_en: String, // NEW: English Description
+  desc: String,
+  desc_it: String,
+  desc_en: String,
   available: Boolean,
-  image: String
+  image: String,
+  clicks: { type: Number, default: 0 } // NEW: Tracks item popularity
 });
 
 const MenuItem = mongoose.model('MenuItem', menuItemSchema);
@@ -445,6 +446,18 @@ app.post('/api/menu/delete', requireApiAdmin, async (req, res) => {
     } else {
       res.status(404).json({ success: false, message: 'Item not found' });
     }
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// --- ANALYTICS TRACKING ENDPOINT ---
+app.post('/api/menu/track', async (req, res) => {
+  try {
+    const { id } = req.body;
+    // $inc tells MongoDB to increment the current number by 1
+    await MenuItem.findOneAndUpdate({ id }, { $inc: { clicks: 1 } });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false });
   }
