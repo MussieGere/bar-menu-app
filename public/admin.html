@@ -438,6 +438,38 @@ input:checked + .slider:before { transform: translateX(26px); }
     });
   }
 
+  async function loadAnalytics() {
+    const res = await fetch('/api/menu');
+    let menu = await res.json();
+    
+    // Sort items by highest clicks first, and filter out items with 0 clicks
+    menu = menu.filter(item => item.clicks > 0).sort((a, b) => b.clicks - a.clicks);
+    
+    const container = document.getElementById('analytics-container');
+    if (menu.length === 0) {
+      container.innerHTML = '<p>No analytics data yet. Wait for customers to tap items!</p>';
+      return;
+    }
+
+    // Find the highest click count to scale the visual bars
+    const maxClicks = menu[0].clicks;
+
+    container.innerHTML = menu.map(item => {
+      const percentage = (item.clicks / maxClicks) * 100;
+      return `
+        <div style="margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+            <strong>${item.name}</strong>
+            <span style="color: var(--gold); font-weight: 600;">${item.clicks} clicks</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: #eee; border-radius: 4px; overflow: hidden;">
+            <div style="width: ${percentage}%; height: 100%; background: #4CAF82; border-radius: 4px;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
   // Add Item with Duplicate Prevention
   document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
