@@ -63,12 +63,12 @@
     font-family: 'Cormorant Garamond', serif;
     font-size: 32px;
     font-weight: 600;
-    color: #D4AF37; /* Elegant Gold */
+    color: #E3C27C; /* Soft Champagne Gold */
     text-align: center;
     margin: 50px 0 20px;
     text-transform: uppercase;
     letter-spacing: 2px;
-    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    border-bottom: 1px solid rgba(227, 194, 124, 0.3);
     padding-bottom: 10px;
   }
   
@@ -76,7 +76,7 @@
     font-family: 'Montserrat', sans-serif;
     font-size: 14px;
     font-weight: 600;
-    color: #F4F1EA; /* Light Cream */
+    color: #F4F1EA;
     text-align: center;
     margin: 30px 0 20px;
     letter-spacing: 5px;
@@ -84,7 +84,7 @@
   }
 
   .wine-section .menu-item { 
-    border-bottom: 1px dashed rgba(244, 241, 234, 0.2);
+    border-bottom: 1px dashed rgba(244, 241, 234, 0.15);
     padding: 16px 0;
     display: grid;
     grid-template-columns: 1fr auto;
@@ -93,7 +93,7 @@
   }
   
   .wine-section .item-name { 
-    color: #FFFFFF; /* White for readability */
+    color: #FFFFFF; 
     font-size: 20px; 
     font-weight: 600;
     display: flex;
@@ -103,7 +103,7 @@
   }
   
   .wine-section .item-desc { 
-    color: rgba(244, 241, 234, 0.8);
+    color: rgba(244, 241, 234, 0.75);
     font-size: 13px;
     font-style: italic;
     line-height: 1.5;
@@ -111,7 +111,7 @@
   }
   
   .wine-section .item-price { 
-    color: #D4AF37; /* Elegant Gold */
+    color: #E3C27C; 
     font-size: 18px; 
     font-weight: 700;
   }
@@ -161,11 +161,12 @@
   
   <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
   
-  <select id="lang-switcher" onchange="setLanguage(this.value)" style="background: transparent; border: 1px solid rgba(139,90,43,0.3); color: var(--gold); font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; cursor: pointer; outline: none;">
-    <option value="en">EN</option>
-    <option value="it">IT</option>
-    <option value="de">DE</option>
-    <option value="fr">FR</option>
+  <select id="lang-switcher" onchange="setLanguage(this.value)" style="background: transparent; border: 1px solid rgba(139,90,43,0.3); color: var(--gold); font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; text-transform: uppercase; padding: 4px 6px; border-radius: 4px; cursor: pointer; outline: none;">
+    <option value="en">🇬🇧 EN</option>
+    <option value="it">🇮🇹 IT</option>
+    <option value="es">🇪🇸 ES</option>
+    <option value="de">🇩🇪 DE</option>
+    <option value="fr">🇫🇷 FR</option>
   </select>
 </div>
 
@@ -214,6 +215,16 @@
       dessertsTab: "Dolci",
       sessionExp: "Sessione Scaduta",
       sessionExpDesc: "Il tuo accesso è scaduto. Scansiona nuovamente il QR code al tuo tavolo.",
+      subtitle: "Taormina, Sicilia"
+    },
+    es: {
+      foodTab: "Comida y Pizzas",
+      drinksTab: "Bar y Café",
+      restTab: "Restaurante",
+      wineTab: "Carta de Vinos",
+      dessertsTab: "Postres",
+      sessionExp: "Sesión Caducada",
+      sessionExpDesc: "Su acceso ha expirado. Vuelva a escanear el código QR en su mesa.",
       subtitle: "Taormina, Sicilia"
     },
     de: {
@@ -364,10 +375,12 @@
             const targetCategory = subCat ? `${mainCat} - ${subCat}` : mainCat;
             tabItems.filter(i => i.category === targetCategory).forEach(item => {
               
-              // 1. Language Selection Logic for Wine Descriptions
+              // Language Selection Logic
               let selectedDesc = '';
               if (currentLang === 'it' && item.desc_it) {
                 selectedDesc = item.desc_it;
+              } else if (currentLang === 'es' && item.desc_es) {
+                selectedDesc = item.desc_es;
               } else if (currentLang !== 'it' && item.desc_en) {
                 selectedDesc = item.desc_en; 
               } else if (item.desc_it) {
@@ -376,7 +389,7 @@
                 selectedDesc = item.desc || ''; 
               }
 
-              // 2. Process BIO logic across all fields
+              // BIO logic
               const isBio = item.name.includes('BIO') || 
                             (item.desc && item.desc.includes('BIO')) || 
                             (item.desc_it && item.desc_it.includes('BIO')) || 
@@ -384,12 +397,12 @@
                             
               const bioIndicator = isBio ? '<span class="bio-badge">🍃 BIO</span>' : '';
               
-              // 3. Clean string cleanups to remove text duplicates of the badge
               let cleanName = item.name.replace(/\bBIO\b/g, '').trim();
               let cleanDesc = selectedDesc.replace(/\bBIO\b/g, '').trim();
 
+              // THE TRACKING ONCLICK IS ADDED HERE
               html += `
-                <div class="menu-item">
+                <div class="menu-item" onclick="trackClick('${item.id}')">
                   <div class="item-name">${cleanName} ${bioIndicator}</div>
                   <div class="item-price">${item.price}</div>
                   ${cleanDesc ? `<div class="item-desc">${cleanDesc}</div>` : ''}
@@ -405,10 +418,12 @@
           html += `<div class="category-title">${cat}</div>`;
           tabItems.filter(i => i.category === cat).forEach(item => {
             
-            // Language Selection Logic for Standard Descriptions
+            // Language Selection Logic
             let selectedDesc = '';
             if (currentLang === 'it' && item.desc_it) {
               selectedDesc = item.desc_it;
+            } else if (currentLang === 'es' && item.desc_es) {
+              selectedDesc = item.desc_es;
             } else if (currentLang !== 'it' && item.desc_en) {
               selectedDesc = item.desc_en; 
             } else if (item.desc_it) {
@@ -417,8 +432,9 @@
               selectedDesc = item.desc || ''; 
             }
 
+            // THE TRACKING ONCLICK IS ADDED HERE
             html += `
-              <div class="menu-item">
+              <div class="menu-item" onclick="trackClick('${item.id}')">
                 ${item.image ? `<img src="${item.image}" alt="${item.name}" class="item-image">` : ''}
                 <div class="item-name">${item.name}</div>
                 <div class="item-price">${item.price}</div>
@@ -462,6 +478,15 @@
   window.addEventListener('blur', () => document.body.style.filter = 'blur(20px)');
   window.addEventListener('focus', () => document.body.style.filter = '');
   document.addEventListener('contextmenu', e => e.preventDefault());
+
+  // Silently track what customers are tapping on
+  function trackClick(id) {
+    fetch('/api/menu/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    }).catch(err => console.log('Tracking ignored')); // Fails silently if offline
+  }
 
   initSession();
 </script>
