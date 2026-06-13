@@ -351,6 +351,103 @@ app.get('/scan', (req, res) => {
 
 // --- DATABASE API ENDPOINTS ---
 
+// --- ONE-TIME DATABASE MIGRATION SCRIPT ---
+app.get('/api/migrate-db', async (req, res) => {
+  try {
+    // 1. Move all 'drinks' to 'bar'
+    await MenuItem.updateMany({ tab: 'drinks' }, { $set: { tab: 'bar' } });
+
+    // 2. Move Breakfast out of 'desserts' and into 'bar'
+    await MenuItem.updateMany({ category: 'Colazione / Breakfast' }, { $set: { tab: 'bar' } });
+
+    // 3. Automatically add the entire Cocktails & Spirits list
+    const cocktailCount = await MenuItem.countDocuments({ tab: 'cocktails' });
+    if (cocktailCount === 0) {
+      const newCocktails = [
+        // SPARKLING & SPRITZ (8€)
+        { name: 'Bellini', desc_it: 'Pesca, Prosecco', desc_en: 'Peach, Prosecco', price: '€ 8,00', category: 'Sparkling & Spritz' },
+        { name: 'Rossini', desc_it: 'Fragola, Prosecco', desc_en: 'Strawberry, Prosecco', price: '€ 8,00', category: 'Sparkling & Spritz' },
+        { name: 'Mimosa', desc_it: 'Arancia, Prosecco', desc_en: 'Orange, Prosecco', price: '€ 8,00', category: 'Sparkling & Spritz' },
+        { name: 'Kir Royal', desc_it: 'Creme de Cassis, Prosecco', desc_en: 'Creme de Cassis, Prosecco', price: '€ 8,00', category: 'Sparkling & Spritz' },
+        { name: 'Aperol Spritz', desc_it: 'Aperol, Prosecco, Soda water', desc_en: 'Aperol, Prosecco, Soda water', price: '€ 8,00', category: 'Sparkling & Spritz' },
+        { name: 'Martini Spritz', desc_it: 'Martini bianco, Prosecco, Soda Water', desc_en: 'Sweet Vermouth, Prosecco, Soda Water', price: '€ 8,00', category: 'Sparkling & Spritz' },
+        { name: 'Campari Spritz', desc_it: 'Campari, Prosecco, Soda Water', desc_en: 'Campari, Prosecco, Soda Water', price: '€ 8,00', category: 'Sparkling & Spritz' },
+        { name: 'Hugo Spritz', desc_it: 'Liquore Sambuco, Prosecco, Soda Water', desc_en: 'Elderflower Liqueur, Prosecco, Soda Water', price: '€ 8,00', category: 'Sparkling & Spritz' },
+        { name: 'Limoncello Spritz', desc_it: 'Limoncello, Prosecco, Soda Water', desc_en: 'Limoncello, Prosecco, Soda Water', price: '€ 8,00', category: 'Sparkling & Spritz' },
+
+        // PRE-DINNER (9€)
+        { name: 'Americano', desc_it: 'Martini rosso, Bitter Campari, Soda Water', desc_en: 'Sweet Vermouth, Campari, Soda Water', price: '€ 9,00', category: 'Pre-Dinner' },
+        { name: 'Negroni', desc_it: 'Bitter Campari, Martini rosso, Gin', desc_en: 'Campari, Sweet Vermouth, Gin', price: '€ 9,00', category: 'Pre-Dinner' },
+        { name: 'Dry Martini', desc_it: 'Gin, Martini dry', desc_en: 'Gin, Dry Vermouth', price: '€ 9,00', category: 'Pre-Dinner' },
+        { name: 'Vodka Martini', desc_it: 'Vodka, Martini dry', desc_en: 'Vodka, Dry Vermouth', price: '€ 9,00', category: 'Pre-Dinner' },
+        { name: 'Daiquiri', desc_it: 'Rum, succo di limone, Sciroppo di zucchero', desc_en: 'Rum, Lemon juice, Simple syrup', price: '€ 9,00', category: 'Pre-Dinner' },
+        { name: 'Manhattan', desc_it: 'Canadian whisky, Martini rosso, Angostura', desc_en: 'Canadian whisky, Sweet Vermouth, Angostura bitters', price: '€ 9,00', category: 'Pre-Dinner' },
+
+        // AFTER DINNER (9€)
+        { name: 'Black Russian', desc_it: 'Kalua, Vodka', desc_en: 'Kahlúa, Vodka', price: '€ 9,00', category: 'After Dinner' },
+        { name: 'French Connection', desc_it: 'Cognac, Amaretto', desc_en: 'Cognac, Amaretto', price: '€ 9,00', category: 'After Dinner' },
+        { name: 'God Father', desc_it: 'Whisky, Amaretto', desc_en: 'Whisky, Amaretto', price: '€ 9,00', category: 'After Dinner' },
+        { name: 'God Mother', desc_it: 'Vodka, Amaretto', desc_en: 'Vodka, Amaretto', price: '€ 9,00', category: 'After Dinner' },
+        { name: 'Irish Coffee', desc_it: 'Whisky Irlandese, Caffè, Panna', desc_en: 'Irish Whiskey, Coffee, Cream', price: '€ 9,00', category: 'After Dinner' },
+        { name: 'Stinger', desc_it: 'Brandy, crema di menta bianca', desc_en: 'Brandy, White crème de menthe', price: '€ 9,00', category: 'After Dinner' },
+        { name: 'Espresso Martini', desc_it: 'Vodka, Kahlúa, Espresso, Sciroppo di zucchero', desc_en: 'Vodka, Kahlúa, Espresso, Simple Syrup', price: '€ 9,00', category: 'After Dinner' },
+
+        // ALL TIME (10€)
+        { name: 'Caipirinha', desc_it: 'Cachaça, Lime, Zucchero di canna', desc_en: 'Cachaça, Lime, Brown sugar', price: '€ 10,00', category: 'All Time' },
+        { name: 'Caipiroska', desc_it: 'Vodka, Lime, Zucchero di canna', desc_en: 'Vodka, Lime, Brown sugar', price: '€ 10,00', category: 'All Time' },
+        { name: 'Daiquiri alla frutta', desc_it: 'Rum, Succo di limone, Zucchero, Frutta fresca', desc_en: 'Rum, Lemon juice, Sugar, Fresh fruit', price: '€ 10,00', category: 'All Time' },
+        { name: 'Margarita', desc_it: 'Tequila, Triple sec, Succo di limone', desc_en: 'Tequila, Triple sec, Lemon juice', price: '€ 10,00', category: 'All Time' },
+        { name: 'Mojito', desc_it: 'Rum, Lime, Zucchero di canna, Menta, Soda water', desc_en: 'Rum, Lime, Brown sugar, Mint, Soda water', price: '€ 10,00', category: 'All Time' },
+        { name: 'Piña Colada', desc_it: 'Rum, Succo di ananas, Cocco', desc_en: 'Rum, Pineapple juice, Coconut', price: '€ 10,00', category: 'All Time' },
+        { name: 'Tequila Sunrise', desc_it: 'Tequila, Succo d\'arancia, Granatina', desc_en: 'Tequila, Orange juice, Grenadine', price: '€ 10,00', category: 'All Time' },
+        { name: 'Cuba Libre', desc_it: 'Rum, Succo di limone, Coca Cola', desc_en: 'Rum, Lemon juice, Coca Cola', price: '€ 10,00', category: 'All Time' },
+        { name: 'Bloody Mary', desc_it: 'Vodka, Pomodoro, Limone, Worcester, Tabasco', desc_en: 'Vodka, Tomato, Lemon, Worcester, Tabasco', price: '€ 10,00', category: 'All Time' },
+        { name: 'Long Island Ice Tea', desc_it: 'Tequila, Vodka, Rum, Triple sec, Gin, Limone', desc_en: 'Tequila, Vodka, Rum, Triple sec, Gin, Lemon', price: '€ 10,00', category: 'All Time' },
+        { name: 'Moscow Mule', desc_it: 'Vodka, Succo di lime, Ginger beer', desc_en: 'Vodka, Lime juice, Ginger beer', price: '€ 10,00', category: 'All Time' },
+        { name: 'Pimm\'s cup n.1', desc_it: 'Pimm\'s, Ginger Ale, frutta mista', desc_en: 'Pimm\'s, Ginger Ale, mixed fruit', price: '€ 10,00', category: 'All Time' },
+
+        // GIN TONIC / MIXERS
+        { name: 'Gin Mare Tonic', desc_it: '', desc_en: '', price: '€ 12,00', category: 'Gin Tonic / Mixers' },
+        { name: 'Gin Hendrick\'s Tonic', desc_it: '', desc_en: '', price: '€ 11,00', category: 'Gin Tonic / Mixers' },
+        { name: 'Gin Bombay Tonic', desc_it: '', desc_en: '', price: '€ 9,00', category: 'Gin Tonic / Mixers' },
+        { name: 'Gin Tanqueray Tonic', desc_it: '', desc_en: '', price: '€ 9,00', category: 'Gin Tonic / Mixers' },
+        { name: 'Gin Beefeater Tonic', desc_it: '', desc_en: '', price: '€ 8,00', category: 'Gin Tonic / Mixers' },
+        { name: 'Vodka Tonic/Lemon', desc_it: '', desc_en: '', price: '€ 8,00', category: 'Gin Tonic / Mixers' },
+        { name: 'Vodka Orange', desc_it: '', desc_en: '', price: '€ 8,00', category: 'Gin Tonic / Mixers' },
+        { name: 'Vodka RedBull', desc_it: '', desc_en: '', price: '€ 8,00', category: 'Gin Tonic / Mixers' },
+        { name: 'Rum e Cola', desc_it: '', desc_en: '', price: '€ 8,00', category: 'Gin Tonic / Mixers' },
+
+        // DISTILLATI / SPIRITS
+        { name: 'Gin Mare', desc_it: 'Gin', desc_en: 'Gin', price: '€ 10,00', category: 'Distillati / Spirits' },
+        { name: 'Gin Hendrick\'s', desc_it: 'Gin', desc_en: 'Gin', price: '€ 9,00', category: 'Distillati / Spirits' },
+        { name: 'Gin Bombay Sapphire / Tanqueray', desc_it: 'Gin', desc_en: 'Gin', price: '€ 7,00', category: 'Distillati / Spirits' },
+        { name: 'Absolut', desc_it: 'Vodka', desc_en: 'Vodka', price: '€ 8,00', category: 'Distillati / Spirits' },
+        { name: 'Belvedere', desc_it: 'Vodka', desc_en: 'Vodka', price: '€ 9,00', category: 'Distillati / Spirits' },
+        { name: 'Josè Cuervo', desc_it: 'Tequila', desc_en: 'Tequila', price: '€ 7,00', category: 'Distillati / Spirits' },
+        { name: 'Havana 7', desc_it: 'Rum', desc_en: 'Rum', price: '€ 8,00', category: 'Distillati / Spirits' },
+        { name: 'Jack Daniel\'s (Bourbon)', desc_it: 'Whisky', desc_en: 'Whisky', price: '€ 8,00', category: 'Distillati / Spirits' },
+        { name: 'Laphroaig 10 (Single malt)', desc_it: 'Whisky', desc_en: 'Whisky', price: '€ 9,00', category: 'Distillati / Spirits' },
+        { name: 'Oban 14 (Torbato)', desc_it: 'Whisky', desc_en: 'Whisky', price: '€ 10,00', category: 'Distillati / Spirits' },
+        { name: 'Courvoisier Vsop', desc_it: 'Cognac', desc_en: 'Cognac', price: '€ 11,00', category: 'Distillati / Spirits' },
+        { name: 'Remy Martin Vsop', desc_it: 'Cognac', desc_en: 'Cognac', price: '€ 12,00', category: 'Distillati / Spirits' },
+        { name: 'Grappa Barricata', desc_it: 'Grappa', desc_en: 'Grappa', price: '€ 6,00', category: 'Distillati / Spirits' }
+      ].map(item => ({
+        id: require('crypto').randomBytes(4).toString('hex'),
+        tab: 'cocktails',
+        available: true,
+        clicks: 0,
+        ...item
+      }));
+
+      await MenuItem.insertMany(newCocktails);
+    }
+
+    res.send('<div style="font-family: sans-serif; text-align: center; padding: 50px;"><h1>✅ Migration Complete!</h1><p>Breakfast is now in the Bar menu, drinks are moved, and all Cocktails have been uploaded to MongoDB.</p><a href="/admin.html" style="padding: 15px 30px; background: #8B5A2B; color: white; text-decoration: none; border-radius: 4px;">Return to Admin Dashboard</a></div>');
+  } catch (err) {
+    res.status(500).send('Error during migration: ' + err.message);
+  }
+});
+
 app.get('/api/menu', async (req, res) => {
   try {
     const menu = await MenuItem.find({});
