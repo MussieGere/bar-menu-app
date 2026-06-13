@@ -85,9 +85,10 @@ input:checked + .slider:before { transform: translateX(26px); }
 <div id="panel-manage" class="panel">
   <h2>Current Menu</h2>
   <div class="nav-tabs" id="manage-tabs" style="background: white; border: none; margin-bottom: 20px; padding: 0;">
-    <button class="tab-btn" onclick="switchManageTab('food', this)" style="border-bottom: 3px solid transparent;">Food & Pizze</button>
-    <button class="tab-btn" onclick="switchManageTab('drinks', this)" style="border-bottom: 3px solid transparent;">Bar & Caffe</button>
+    <button class="tab-btn" onclick="switchManageTab('bar', this)" style="border-bottom: 3px solid transparent;">Bar & Caffetteria</button>
+    <button class="tab-btn" onclick="switchManageTab('food', this)" style="border-bottom: 3px solid transparent;">Pizza & Sandwiches</button>
     <button class="tab-btn" onclick="switchManageTab('restaurant', this)" style="border-bottom: 3px solid transparent;">Ristorante</button>
+    <button class="tab-btn" onclick="switchManageTab('cocktails', this)" style="border-bottom: 3px solid transparent;">Cocktails</button>
     <button class="tab-btn" onclick="switchManageTab('wine', this)" style="border-bottom: 3px solid transparent;">Wine List</button>
     <button class="tab-btn" onclick="switchManageTab('desserts', this)" style="border-bottom: 3px solid transparent;">Desserts</button>
   </div>
@@ -132,9 +133,10 @@ input:checked + .slider:before { transform: translateX(26px); }
     <div class="form-group">
       <label>Section</label>
       <select id="f-tab" required>
-        <option value="food">Food & Pizze</option>
-        <option value="drinks">Bar & Caffetteria</option>
+        <option value="bar">Bar & Caffetteria</option>
+        <option value="food">Pizza & Sandwiches</option>
         <option value="restaurant">Ristorante</option>
+        <option value="cocktails">Cocktails & Spirits</option>
         <option value="wine">Wine</option>
         <option value="desserts">Desserts</option>
       </select>
@@ -537,23 +539,31 @@ input:checked + .slider:before { transform: translateX(26px); }
   });
 
   // --- DYNAMIC CATEGORY DROPDOWN LOGIC ---
+  // --- DYNAMIC CATEGORY DROPDOWN LOGIC ---
   const categoryMapping = {
-    'food': [
-      'Burger / Burgers', 
-      'Panini / Sandwiches', 
-      'Pizze / Pizzas'
-    ],
-    'drinks': [
+    'bar': [
+      'Colazione / Breakfast',
       'Birre / Beers', 
-      'Vini / Wine', 
-      'Liquori / Liquors', 
-      'Aperitivi / Long drink', 
-      'Bevande / Soft drink'
+      'Bevande / Soft drink',
+      'Caffetteria / Coffee'
+    ],
+    'food': [
+      'Pizze / Pizzas',
+      'Panini / Sandwiches', 
+      'Burger / Burgers'
     ],
     'restaurant': [
       'Antipasti / Starters', 
       'Primi Piatti / First Courses', 
       'Secondi Piatti / Main Courses'
+    ],
+    'cocktails': [
+      'Sparkling & Spritz',
+      'Pre-Dinner',
+      'After Dinner',
+      'All Time',
+      'Gin Tonic / Mixers',
+      'Distillati / Spirits'
     ],
     'wine': [
       'Bollicine / Sparkling Wine',
@@ -567,11 +577,10 @@ input:checked + .slider:before { transform: translateX(26px); }
       'Vini Mossi / Sparkling Wine'
     ],
     'desserts': [
-      'Colazione / Breakfast', 
-      'Gelateria / Ice cream'
+      'Gelateria / Ice cream',
+      'Dolci / Sweets'
     ]
   };
-
   document.getElementById('f-tab').addEventListener('change', function() {
     const selectedSection = this.value;
     const catSelect = document.getElementById('f-cat');
@@ -594,7 +603,7 @@ input:checked + .slider:before { transform: translateX(26px); }
   document.getElementById('f-tab').dispatchEvent(new Event('change'));
   
   loadQr();
-  loadMenu('food');
+  loadMenu('bar');
   // Highlight first manage tab
   document.querySelectorAll('#manage-tabs .tab-btn')[0].style.borderBottomColor = 'var(--gold)';
 </script>
