@@ -263,6 +263,57 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilt
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); // NEW: Parse cookies
+
+// --- SECURITY MIDDLEWARE ---
+// Protects the HTML page
+const requireAdmin = (req, res, next) => {
+  const token = req.cookies.adminToken;
+  if (!token) return res.redirect('/login.html');
+  try {
+    jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch (err) {
+    res.clearCookie('adminToken');
+    res.redirect('/login.html');
+  }
+};
+
+// Protects the API endpoints from Postman/Hacker attacks
+const requireApiAdmin = (req, res, next) => {
+  const token = req.cookies.adminToken;
+  if (!token) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  try {
+    jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch (err) {
+    res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+};
+
+// --- LOGIN ROUTE ---
+app.post('/api/login', (req, res) => {
+  const { password } = req.body;
+  if (password === process.env.ADMIN_PASSWORD) {
+    // Generate a 12-hour token
+    const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '12h' });
+    // Save it in a secure, HttpOnly cookie so JavaScript cannot steal it
+    res.cookie('adminToken', token, { httpOnly: true, secure: true, sameSite: 'strict' });
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ success: false, message: 'Invalid password' });
+  }
+});
+
+// --- INTERCEPT ADMIN.HTML (MUST BE BEFORE express.static) ---
+app.get('/admin.html', requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+app.get('/admin', requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Now we can safely serve the rest of the public folder
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Prevent caching
