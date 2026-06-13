@@ -1,4 +1,6 @@
 require('dotenv').config();
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 const express = require('express');
 const crypto = require('crypto');
 const path = require('path');
