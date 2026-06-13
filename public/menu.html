@@ -176,9 +176,10 @@
 </header>
 
 <nav class="nav-tabs" id="nav-container" style="display:none;">
-  <button class="tab-btn active" onclick="showTab('food', this)">Food & Pizze</button>
-  <button class="tab-btn" onclick="showTab('drinks', this)">Bar & Caffe</button>
+  <button class="tab-btn active" onclick="showTab('bar', this)">Bar & Caffetteria</button>
+  <button class="tab-btn" onclick="showTab('food', this)">Pizza & Sandwiches</button>
   <button class="tab-btn" onclick="showTab('restaurant', this)">Ristorante</button>
+  <button class="tab-btn" onclick="showTab('cocktails', this)">Cocktails</button>
   <button class="tab-btn" onclick="showTab('wine', this)" id="wine-tab" style="display:none;">Wine List</button>
   <button class="tab-btn" onclick="showTab('desserts', this)" id="desserts-tab" style="display:none;">Desserts</button>
 </nav>
@@ -198,9 +199,10 @@
   // --- i18n TRANSLATION DICTIONARY ---
   const i18n = {
     en: {
-      foodTab: "Food & Pizze",
-      drinksTab: "Bar & Caffe",
-      restTab: "Ristorante",
+      barTab: "Bar & Cafe",
+      foodTab: "Pizza & Sandwiches",
+      restTab: "Restaurant",
+      cocktailTab: "Cocktails",
       wineTab: "Wine List",
       dessertsTab: "Desserts",
       sessionExp: "Session Expired",
@@ -208,9 +210,10 @@
       subtitle: "Taormina, Sicily"
     },
     it: {
-      foodTab: "Cibo e Pizze",
-      drinksTab: "Bar e Caffetteria",
+      barTab: "Bar & Caffetteria",
+      foodTab: "Pizza e Panini",
       restTab: "Ristorante",
+      cocktailTab: "Cocktails",
       wineTab: "Carta dei Vini",
       dessertsTab: "Dolci",
       sessionExp: "Sessione Scaduta",
@@ -218,9 +221,10 @@
       subtitle: "Taormina, Sicilia"
     },
     es: {
-      foodTab: "Comida y Pizzas",
-      drinksTab: "Bar y Café",
+      barTab: "Bar y Café",
+      foodTab: "Pizza y Bocadillos",
       restTab: "Restaurante",
+      cocktailTab: "Cócteles",
       wineTab: "Carta de Vinos",
       dessertsTab: "Postres",
       sessionExp: "Sesión Caducada",
@@ -228,9 +232,10 @@
       subtitle: "Taormina, Sicilia"
     },
     de: {
-      foodTab: "Essen & Pizzen",
-      drinksTab: "Bar & Café",
+      barTab: "Bar & Café",
+      foodTab: "Pizza & Sandwiches",
       restTab: "Restaurant",
+      cocktailTab: "Cocktails",
       wineTab: "Weinkarte",
       dessertsTab: "Nachspeisen",
       sessionExp: "Sitzung Abgelaufen",
@@ -238,9 +243,10 @@
       subtitle: "Taormina, Sizilien"
     },
     fr: {
-      foodTab: "Nourriture & Pizzas",
-      drinksTab: "Bar & Café",
+      barTab: "Bar & Café",
+      foodTab: "Pizza & Sandwichs",
       restTab: "Restaurant",
+      cocktailTab: "Cocktails",
       wineTab: "Carte des Vins",
       dessertsTab: "Desserts",
       sessionExp: "Session Expirée",
@@ -257,12 +263,13 @@
 
     // 1. Update Tabs
     const tabs = document.querySelectorAll('.tab-btn');
-    if(tabs.length >= 5) {
-      tabs[0].innerText = t.foodTab;
-      tabs[1].innerText = t.drinksTab;
+    if(tabs.length >= 6) {
+      tabs[0].innerText = t.barTab;
+      tabs[1].innerText = t.foodTab;
       tabs[2].innerText = t.restTab;
-      tabs[3].innerText = t.wineTab;
-      tabs[4].innerText = t.dessertsTab;
+      tabs[3].innerText = t.cocktailTab;
+      tabs[4].innerText = t.wineTab;
+      tabs[5].innerText = t.dessertsTab;
     }
 
     // 2. Update Gates
@@ -328,8 +335,8 @@
     container.innerHTML = '';
     
     const menuType = getMenuType();
-    let tabs = ['food', 'drinks', 'restaurant'];
-    let firstTab = 'food';
+    let tabs = ['bar', 'food', 'restaurant', 'cocktails'];
+    let firstTab = 'bar';
     
     if (menuType === 'wine') {
       tabs = ['wine'];
@@ -337,7 +344,7 @@
       document.getElementById('wine-tab').style.display = 'block';
       document.getElementById('desserts-tab').style.display = 'none';
       document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-        if (idx < 3) btn.style.display = 'none';
+        if (idx < 4) btn.style.display = 'none';
       });
       container.classList.add('wine-section');
 
@@ -349,7 +356,7 @@
       document.getElementById('desserts-tab').style.display = 'block';
       document.getElementById('wine-tab').style.display = 'none';
       document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-        if (idx < 3) btn.style.display = 'none';
+        if (idx < 4) btn.style.display = 'none';
       });
     }
     
