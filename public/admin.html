@@ -566,75 +566,70 @@ input:checked + .slider:before { transform: translateX(26px); }
   
   // Add Item with Duplicate Prevention
   document.getElementById('addForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Stop the page from reloading
     
-    const name = document.getElementById('f-name').value.trim();
-    const category = document.getElementById('f-cat').value;
-    const tab = document.getElementById('f-tab').value;
-    
-    // Check for duplicates
-    const res = await fetch('/api/menu');
-    const menu = await res.json();
-    const duplicate = menu.find(item => 
-      item.name.toLowerCase() === name.toLowerCase() && 
-      item.category === category
-    );
-    
-    if (duplicate) {
-      const confirmAdd = confirm(`"${name}" already exists in ${category}!\n\nWould you like to edit this existing item instead and add an image to it?\n\nClick OK to go to Edit Item, or Cancel to add anyway.`);
-      if (confirmAdd) {
-        switchTab('edit');
-        document.getElementById('edit-search-input').value = name;
-        document.getElementById('edit-search-input').dispatchEvent(new Event('input'));
-        return;
+    try {
+      let imagePath = '';
+      const fileInput = document.getElementById('f-image');
+
+      // 1. Handle Image Upload (with error alerts!)
+      if (fileInput && fileInput.files.length > 0) {
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        
+        const uploadRes = await fetch('/api/menu/upload-image', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json();
+          alert(`❌ Image Upload Failed: ${errorData.message || 'Check server logs'}`);
+          return; // Stop here if the image fails
+        }
+        const uploadData = await uploadRes.json();
+        imagePath = uploadData.imagePath;
       }
-    }
-    
-    let imagePath = '';
-    const fileInput = document.getElementById('f-image');
-    if (fileInput.files.length > 0) {
-      const formData = new FormData();
-      formData.append('image', fileInput.files[0]);
-      const uploadRes = await fetch('/api/menu/upload-image', {
-        method: 'POST',
-        body: formData
-      });
-      
-      // NEW: Catch backend errors during item edits
-      if (!uploadRes.ok) {
-        const errorData = await uploadRes.json();
-        alert(`❌ Upload Failed: ${errorData.message || 'Check server logs'}`);
-        return;
-      }
-      
-      const uploadData = await uploadRes.json();
-      imagePath = uploadData.imagePath;
-    }
-    
-    const newItem = {
-        // We removed the frontend ID generator to let the backend handle it safely
-        tab: document.getElementById('f-tab').value,
-        category: document.getElementById('f-category').value,
-        name: document.getElementById('f-name').value,
-        price: '€ ' + document.getElementById('f-price').value, // Restored the Euro sign!
-        desc_it: document.getElementById('f-desc-it').value,
-        desc_en: document.getElementById('f-desc-en').value,
+
+      // 2. Build the new item object safely using ternary operators
+      // If an element is accidentally missing from the HTML, it won't crash anymore!
+      const newItem = {
+        tab: document.getElementById('f-tab') ? document.getElementById('f-tab').value : 'food',
+        category: document.getElementById('f-category') ? document.getElementById('f-category').value : '',
+        name: document.getElementById('f-name') ? document.getElementById('f-name').value : '',
+        price: document.getElementById('f-price') ? '€ ' + document.getElementById('f-price').value : '',
+        desc_it: document.getElementById('f-desc-it') ? document.getElementById('f-desc-it').value : '',
+        desc_en: document.getElementById('f-desc-en') ? document.getElementById('f-desc-en').value : '',
         image: imagePath,
         available: true,
-        // NEW DIETARY FIELDS
-        isVegetarian: document.getElementById('f-veg').checked,
-        isVegan: document.getElementById('f-vegan').checked,
-        isGlutenFree: document.getElementById('f-gf').checked
+        // Safely check the dietary fields
+        isVegetarian: document.getElementById('f-veg') ? document.getElementById('f-veg').checked : false,
+        isVegan: document.getElementById('f-vegan') ? document.getElementById('f-vegan').checked : false,
+        isGlutenFree: document.getElementById('f-gf') ? document.getElementById('f-gf').checked : false
       };
-    
-    await fetch('/api/menu/add', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newItem)
-    });
-    alert('Item added successfully!');
-    document.getElementById('addForm').reset();
-    document.getElementById('f-image-preview').style.display = 'none';
-    loadMenu();
-    switchTab('manage');
+
+      // 3. Send data to the Node.js Server
+      const res = await fetch('/api/menu/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem)
+      });
+
+      // 4. Show success or server failure
+      if (res.ok) {
+        alert('✅ Item added successfully!');
+        document.getElementById('addForm').reset(); // Clear the form
+        if (typeof loadMenu === 'function') loadMenu(); // Refresh the management list
+      } else {
+        const errData = await res.json();
+        alert('❌ Server Error: ' + errData.message);
+      }
+      
+    } catch (error) {
+      // 5. Catch any silent frontend crashes and force them into a popup!
+      console.error(error);
+      alert('❌ Frontend Crash: ' + error.message + '\n\nThis usually means an HTML ID is missing.');
+    }
   });
 
   // --- DYNAMIC CATEGORY DROPDOWN LOGIC ---
