@@ -55,32 +55,44 @@
 
 /* --- WINE MENU SPECIAL STYLING --- */
   
- /* --- 1. GLOBAL WINE THEME (Covers the whole page) --- */
+/* --- 1. GLOBAL WINE THEME (Covers the whole page) --- */
   body.wine-theme { 
-    /* This applies your exact PDF background */
     background-image: url('/images/pdf-background.jpg'); 
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    
-    /* Fallback bordeaux color just in case the image loads slowly */
     background-color: #4A0E17; 
   }
 
-  /* Invert the black logos to crisp white for the dark background */
+  /* Force all header blocks to be transparent so the burgundy shows through */
+  body.wine-theme #session-bar,
+  body.wine-theme #nav-container,
+  body.wine-theme .hero {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+
+  /* Fix the faint logos: High contrast makes the white lines thick and dense */
   body.wine-theme .brand-knight,
   body.wine-theme .brand-logo-text {
-    filter: invert(1) brightness(2); 
+    filter: invert(1) contrast(200%); 
     mix-blend-mode: screen; 
   }
 
-  /* Adjust the top session bar and language text to match the gold accents */
+  /* Adjust the Session Bar colors */
   body.wine-theme #session-bar { border-bottom: 1px solid rgba(227, 194, 124, 0.15); }
   body.wine-theme #session-bar, 
   body.wine-theme #timer-text, 
   body.wine-theme #session-bar span { color: #E3C27C; }
   
-  /* Adjust the Search Bar so it's visible on the dark background */
+  /* Make the active "WINE LIST" tab match the gold theme */
+  body.wine-theme .tab-btn { color: rgba(244, 241, 234, 0.6) !important; }
+  body.wine-theme .tab-btn.active { 
+    color: #E3C27C !important; 
+    border-bottom-color: #E3C27C !important; 
+  }
+
+  /* Adjust the Search Bar */
   body.wine-theme #menu-search {
     color: #F4F1EA;
     border-color: rgba(227, 194, 124, 0.4);
