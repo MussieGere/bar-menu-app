@@ -534,6 +534,16 @@ app.post('/api/menu/update-price', requireApiAdmin, async (req, res) => {
   }
 });
 
+app.post('/api/menu/update-category', requireApiAdmin, async (req, res) => {
+  try {
+    const { id, tab, category } = req.body;
+    await MenuItem.findOneAndUpdate({ id }, { tab, category });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
 app.post('/api/menu/delete', requireApiAdmin, async (req, res) => {
   try {
     const { id } = req.body;
