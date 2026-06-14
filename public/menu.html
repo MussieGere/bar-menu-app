@@ -55,7 +55,8 @@
 
 /* --- WINE MENU SPECIAL STYLING --- */
   
-  .wine-section { 
+ /* --- 1. GLOBAL WINE THEME (Covers the whole page) --- */
+  body.wine-theme { 
     /* This applies your exact PDF background */
     background-image: url('/images/pdf-background.jpg'); 
     background-size: cover;
@@ -64,9 +65,31 @@
     
     /* Fallback bordeaux color just in case the image loads slowly */
     background-color: #4A0E17; 
-    min-height: 100vh;
   }
+
+  /* Invert the black logos to crisp white for the dark background */
+  body.wine-theme .brand-knight,
+  body.wine-theme .brand-logo-text {
+    filter: invert(1) brightness(2); 
+    mix-blend-mode: screen; 
+  }
+
+  /* Adjust the top session bar and language text to match the gold accents */
+  body.wine-theme #session-bar { border-bottom: 1px solid rgba(227, 194, 124, 0.15); }
+  body.wine-theme #session-bar, 
+  body.wine-theme #timer-text, 
+  body.wine-theme #session-bar span { color: #E3C27C; }
   
+  /* Adjust the Search Bar so it's visible on the dark background */
+  body.wine-theme #menu-search {
+    color: #F4F1EA;
+    border-color: rgba(227, 194, 124, 0.4);
+  }
+  body.wine-theme #menu-search::placeholder { color: rgba(244, 241, 234, 0.5); }
+
+
+  /* --- 2. WINE SECTION MENU STYLES --- */
+  .wine-section { min-height: 100vh; }
   .wine-section .menu-section { padding: 10px 24px 80px; }
   
   .wine-section .wine-main-title {
@@ -366,6 +389,9 @@
     let firstTab = 'bar';
     
     if (menuType === 'wine') {
+      // NEW: Apply the dark theme to the entire page body
+      document.body.classList.add('wine-theme'); 
+      
       tabs = ['wine'];
       firstTab = 'wine';
       document.getElementById('wine-tab').style.display = 'block';
