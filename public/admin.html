@@ -59,6 +59,7 @@ input:checked + .slider:before { transform: translateX(26px); }
   <button class="tab-btn" onclick="switchTab('manage')">Manage Menu</button>
   <button class="tab-btn" onclick="switchTab('edit')">Edit Item / Add Image</button>
   <button class="tab-btn" onclick="switchTab('add')">Add Item</button>
+  <button class="tab-btn" onclick="switchTab('analytics'); loadAnalytics();">Analytics</button>
 </div>
 
 <div id="panel-qr" class="panel active qr-box">
@@ -80,6 +81,12 @@ input:checked + .slider:before { transform: translateX(26px); }
   <p style="font-size: 13px; color: #666;">Customers who scan this QR code will see the desserts, ice cream, and breakfast menu.</p>
   <img id="dessertsQr" src="" width="250">
   <p id="dessertsUrl" style="font-size: 11px; color: #999; word-break: break-all;"></p>
+</div>
+
+<div id="panel-analytics" class="panel">
+  <h2>Menu Performance Analytics</h2>
+  <p style="font-size: 13px; color: #666; margin-bottom: 20px;">This shows how many times customers have tapped/interacted with each item.</p>
+  <div id="analytics-container"></div>
 </div>
 
 <div id="panel-manage" class="panel">
