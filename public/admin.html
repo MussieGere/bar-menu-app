@@ -131,6 +131,12 @@ input:checked + .slider:before { transform: translateX(26px); }
     </div>
     <button onclick="saveEditedItem()" style="width: 100%; padding: 12px; background: var(--gold); color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-bottom: 15px;">Save Image</button>
 
+    <div style="margin: 15px 0; padding: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px; display: flex; gap: 15px; flex-wrap: wrap;">
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;"><input type="checkbox" id="edit-veg"> 🥕 Vegetarian</label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;"><input type="checkbox" id="edit-vegan"> 🌱 Vegan</label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;"><input type="checkbox" id="edit-gf"> 🌾 Gluten-Free</label>
+    </div>
+    
     <div class="form-group" style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #ccc;">
       <label>Move Item to New Section & Category</label>
       <select id="edit-tab" style="margin-bottom: 10px;"></select>
@@ -188,6 +194,11 @@ input:checked + .slider:before { transform: translateX(26px); }
       <label>Item Image (Optional - JPG, PNG, WebP up to 5MB)</label>
       <input type="file" id="f-image" accept="image/jpeg,image/png,image/webp">
       <img id="f-image-preview" style="max-width: 150px; margin-top: 10px; border-radius: 4px; display: none;">
+    </div>
+    <div style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px; display: flex; gap: 15px; flex-wrap: wrap;">
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;"><input type="checkbox" id="f-veg"> 🥕 Vegetarian</label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;"><input type="checkbox" id="f-vegan"> 🌱 Vegan</label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;"><input type="checkbox" id="f-gf"> 🌾 Gluten-Free</label>
     </div>
     <button type="submit" class="btn-submit">Add to Menu</button>
   </form>
@@ -332,6 +343,11 @@ input:checked + .slider:before { transform: translateX(26px); }
       if (item) {
         const priceStr = item.price.replace('€ ', '').trim();
         document.getElementById('edit-price-input').value = priceStr;
+        
+        // NEW: Load existing dietary tags
+        document.getElementById('edit-veg').checked = item.isVegetarian || false;
+        document.getElementById('edit-vegan').checked = item.isVegan || false;
+        document.getElementById('edit-gf').checked = item.isGlutenFree || false;
       }
     });
     
@@ -422,7 +438,15 @@ input:checked + .slider:before { transform: translateX(26px); }
       await fetch('/api/menu/update-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: currentEditItem, imagePath })
+        body: JSON.stringify({ 
+        id: currentEditItem, 
+        price: document.getElementById('edit-price-input').value,
+        image: imagePath,
+        // NEW DIETARY FIELDS
+        isVegetarian: document.getElementById('edit-veg').checked,
+        isVegan: document.getElementById('edit-vegan').checked,
+        isGlutenFree: document.getElementById('edit-gf').checked
+      })
       });
       alert('Image added successfully!');
       cancelEdit();
@@ -588,14 +612,21 @@ input:checked + .slider:before { transform: translateX(26px); }
     }
     
     const newItem = {
-      tab: tab,
-      category: category,
-      name: name,
-      price: '€ ' + document.getElementById('f-price').value,
-      desc_it: document.getElementById('f-desc-it').value, // Captured IT
-      desc_en: document.getElementById('f-desc-en').value, // Captured EN
-      image: imagePath
-    };
+        id: crypto.randomUUID(),
+        tab: document.getElementById('f-tab').value,
+        category: document.getElementById('f-category').value,
+        name: document.getElementById('f-name').value,
+        price: document.getElementById('f-price').value,
+        desc_it: document.getElementById('f-desc-it').value,
+        desc_en: document.getElementById('f-desc-en').value,
+        image: imagePath,
+        available: true,
+        // NEW DIETARY FIELDS
+        isVegetarian: document.getElementById('f-veg').checked,
+        isVegan: document.getElementById('f-vegan').checked,
+        isGlutenFree: document.getElementById('f-gf').checked
+      };
+    
     await fetch('/api/menu/add', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newItem)
     });
@@ -606,7 +637,6 @@ input:checked + .slider:before { transform: translateX(26px); }
     switchTab('manage');
   });
 
-  // --- DYNAMIC CATEGORY DROPDOWN LOGIC ---
   // --- DYNAMIC CATEGORY DROPDOWN LOGIC ---
   const categoryMapping = {
     'bar': [
