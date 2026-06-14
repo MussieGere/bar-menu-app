@@ -527,13 +527,32 @@ app.post('/api/menu/update-image', requireApiAdmin, async (req, res) => {
   }
 });
 
+// --- UPDATE EXISTING ITEM (Price, Image, and Dietary Badges) ---
 app.post('/api/menu/update-price', requireApiAdmin, async (req, res) => {
   try {
-    const { id, price } = req.body;
-    await MenuItem.findOneAndUpdate({ id }, { price });
+    // 1. "Catch" all the data sent from the admin.html edit form
+    const { id, price, image, isVegetarian, isVegan, isGlutenFree } = req.body;
+
+    // 2. Package the text and boolean data together
+    const updateData = {
+      price: price,
+      isVegetarian: isVegetarian,
+      isVegan: isVegan,
+      isGlutenFree: isGlutenFree
+    };
+
+    // 3. Only overwrite the image if a new one was actually uploaded
+    if (image) {
+      updateData.image = image;
+    }
+
+    // 4. Find the item in MongoDB and apply the updates
+    await MenuItem.findOneAndUpdate({ id: id }, { $set: updateData });
+    
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to update item' });
   }
 });
 
