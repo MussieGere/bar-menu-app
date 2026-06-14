@@ -423,21 +423,26 @@
                 selectedDesc = item.desc || ''; 
               }
 
-              // BIO logic
+              // --- NEW DIETARY & BIO BADGE LOGIC (WINE) ---
+              let badges = '';
+              if (item.isVegetarian) badges += '<span title="Vegetarian" style="font-size: 16px; margin-left: 4px;">🥕</span>';
+              if (item.isVegan) badges += '<span title="Vegan" style="font-size: 16px; margin-left: 4px;">🌱</span>';
+              if (item.isGlutenFree) badges += '<span title="Gluten-Free" style="font-size: 16px; margin-left: 4px;">🌾</span>';
+
+              // Legacy BIO check
               const isBio = item.name.includes('BIO') || 
                             (item.desc && item.desc.includes('BIO')) || 
                             (item.desc_it && item.desc_it.includes('BIO')) || 
                             (item.desc_en && item.desc_en.includes('BIO'));
                             
-              const bioIndicator = isBio ? '<span class="bio-badge">🍃 BIO</span>' : '';
+              if (isBio) badges += '<span class="bio-badge" style="margin-left: 6px;">🍃 BIO</span>';
               
               let cleanName = item.name.replace(/\bBIO\b/g, '').trim();
               let cleanDesc = selectedDesc.replace(/\bBIO\b/g, '').trim();
 
-              // THE TRACKING ONCLICK IS ADDED HERE
               html += `
                 <div class="menu-item" onclick="trackClick('${item.id}')">
-                  <div class="item-name">${cleanName} ${bioIndicator}</div>
+                  <div class="item-name">${cleanName} ${badges}</div>
                   <div class="item-price">${item.price}</div>
                   ${cleanDesc ? `<div class="item-desc">${cleanDesc}</div>` : ''}
                 </div>
@@ -466,11 +471,21 @@
               selectedDesc = item.desc || ''; 
             }
 
-            // THE TRACKING ONCLICK IS ADDED HERE
+            // --- NEW DIETARY & BIO BADGE LOGIC (STANDARD) ---
+            let badges = '';
+            if (item.isVegetarian) badges += '<span title="Vegetarian" style="font-size: 16px; margin-left: 4px;">🥕</span>';
+            if (item.isVegan) badges += '<span title="Vegan" style="font-size: 16px; margin-left: 4px;">🌱</span>';
+            if (item.isGlutenFree) badges += '<span title="Gluten-Free" style="font-size: 16px; margin-left: 4px;">🌾</span>';
+
+            // Clean "BIO" out of standard items just in case
+            const isBio = item.name.includes('BIO');
+            if (isBio) badges += '<span class="bio-badge" style="margin-left: 6px;">🍃 BIO</span>';
+            let cleanName = item.name.replace(/\bBIO\b/g, '').trim();
+
             html += `
               <div class="menu-item" onclick="trackClick('${item.id}')">
-                ${item.image ? `<img src="${item.image}" alt="${item.name}" class="item-image">` : ''}
-                <div class="item-name">${item.name}</div>
+                ${item.image ? `<img src="${item.image}" alt="${cleanName}" class="item-image">` : ''}
+                <div class="item-name">${cleanName} ${badges}</div>
                 <div class="item-price">${item.price}</div>
                 ${selectedDesc ? `<div class="item-desc">${selectedDesc}</div>` : ''}
               </div>
