@@ -87,6 +87,10 @@ input:checked + .slider:before { transform: translateX(26px); }
   <h2>Menu Performance Analytics</h2>
   <p style="font-size: 13px; color: #666; margin-bottom: 20px;">This shows how many times customers have tapped/interacted with each item.</p>
   <div id="analytics-container"></div>
+
+  <button onclick="resetAnalytics()" style="width: 100%; padding: 12px; background: #d32f2f; color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-top: 20px;">
+    Reset All Analytics
+  </button>
 </div>
 
 <div id="panel-manage" class="panel">
@@ -503,6 +507,20 @@ input:checked + .slider:before { transform: translateX(26px); }
         </div>
       `;
     }).join('');
+  }
+
+  async function resetAnalytics() {
+    const confirmReset = confirm("⚠️ Are you sure you want to reset all analytics data?\n\nThis will set all clicks back to zero and cannot be undone.");
+    
+    if (confirmReset) {
+      await fetch('/api/menu/reset-analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      alert('Analytics reset successfully!');
+      loadAnalytics(); // Instantly reloads the chart so it shows an empty state
+    }
   }
 
   async function updateItemCategory() {
