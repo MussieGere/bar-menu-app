@@ -184,9 +184,9 @@
   <button class="tab-btn" onclick="showTab('desserts', this)" id="desserts-tab" style="display:none;">Desserts</button>
 </nav>
 
-<div id="search-wrapper" style="display: none; padding: 15px 24px 5px; max-width: 740px; margin: 0 auto;">
+<div id="search-wrapper" style="display: none; padding: 15px 24px 5px; max-width: 740px; margin: 0 auto; scroll-margin-top: 120px;">
   <div style="position: relative;">
-    <input type="text" id="menu-search" oninput="filterMenu()" placeholder="Search menu..." style="width: 100%; padding: 12px 15px 12px 40px; border: 1px solid rgba(139,90,43,0.3); border-radius: 25px; background: transparent; color: var(--text); font-family: 'Montserrat', sans-serif; font-size: 14px; outline: none; box-sizing: border-box;">
+    <input type="text" id="menu-search" onfocus="setTimeout(() => document.getElementById('search-wrapper').scrollIntoView({behavior: 'smooth', block: 'start'}), 300)" oninput="filterMenu()" placeholder="Search menu..." style="width: 100%; padding: 12px 15px 12px 40px; border: 1px solid rgba(139,90,43,0.3); border-radius: 25px; background: transparent; color: var(--text); font-family: 'Montserrat', sans-serif; font-size: 14px; outline: none; box-sizing: border-box;">
     <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); opacity: 0.5; font-size: 14px;">🔍</span>
   </div>
 </div>
@@ -524,8 +524,6 @@
     }, 1000);
   }
 
-  window.addEventListener('blur', () => document.body.style.filter = 'blur(20px)');
-  window.addEventListener('focus', () => document.body.style.filter = '');
   document.addEventListener('contextmenu', e => e.preventDefault());
 
   // Silently track what customers are tapping on
