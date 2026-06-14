@@ -544,6 +544,17 @@ app.post('/api/menu/update-category', requireApiAdmin, async (req, res) => {
   }
 });
 
+// --- RESET ANALYTICS ---
+app.post('/api/menu/reset-analytics', requireApiAdmin, async (req, res) => {
+  try {
+    // $set: { clicks: 0 } applies to every document in the MenuItem collection
+    await MenuItem.updateMany({}, { $set: { clicks: 0 } });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
 app.post('/api/menu/delete', requireApiAdmin, async (req, res) => {
   try {
     const { id } = req.body;
