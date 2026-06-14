@@ -184,6 +184,13 @@
   <button class="tab-btn" onclick="showTab('desserts', this)" id="desserts-tab" style="display:none;">Desserts</button>
 </nav>
 
+<div id="search-wrapper" style="display: none; padding: 15px 24px 5px; max-width: 740px; margin: 0 auto;">
+  <div style="position: relative;">
+    <input type="text" id="menu-search" oninput="filterMenu()" placeholder="Search menu..." style="width: 100%; padding: 12px 15px 12px 40px; border: 1px solid rgba(139,90,43,0.3); border-radius: 25px; background: transparent; color: var(--text); font-family: 'Montserrat', sans-serif; font-size: 14px; outline: none; box-sizing: border-box;">
+    <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); opacity: 0.5; font-size: 14px;">🔍</span>
+  </div>
+</div>
+  
 <div id="dynamic-menu-container"></div>
   
 <script>
@@ -199,6 +206,7 @@
   // --- i18n TRANSLATION DICTIONARY ---
   const i18n = {
     en: {
+      searchPlaceholder: "Search menu...",
       barTab: "Bar & Cafe",
       foodTab: "Pizza & Sandwiches",
       restTab: "Restaurant",
@@ -210,6 +218,7 @@
       subtitle: "Taormina, Sicily"
     },
     it: {
+      searchPlaceholder: "Cerca nel menù...",
       barTab: "Bar & Caffetteria",
       foodTab: "Pizza e Panini",
       restTab: "Ristorante",
@@ -221,6 +230,7 @@
       subtitle: "Taormina, Sicilia"
     },
     es: {
+      searchPlaceholder: "Buscar en el menú...",
       barTab: "Bar y Café",
       foodTab: "Pizza y Bocadillos",
       restTab: "Restaurante",
@@ -232,6 +242,7 @@
       subtitle: "Taormina, Sicilia"
     },
     de: {
+      searchPlaceholder: "Menü durchsuchen...",
       barTab: "Bar & Café",
       foodTab: "Pizza & Sandwiches",
       restTab: "Restaurant",
@@ -243,6 +254,7 @@
       subtitle: "Taormina, Sizilien"
     },
     fr: {
+      searchPlaceholder: "Rechercher...",
       barTab: "Bar & Café",
       foodTab: "Pizza & Sandwichs",
       restTab: "Restaurant",
@@ -288,6 +300,10 @@
         subtitleElement.innerText = t.subtitle;
       }
     }
+
+    // Update Search Placeholder
+    const searchInput = document.getElementById('menu-search');
+    if(searchInput) searchInput.placeholder = t.searchPlaceholder;
     
     // 4. RE-RENDER THE MENU TO UPDATE DESCRIPTIONS
     fetchMenu(); 
@@ -313,6 +329,7 @@
 
     sessionExpiry = data.expiry;
     document.getElementById('nav-container').style.display = 'flex';
+    document.getElementById('search-wrapper').style.display = 'block'; // NEW: Show Search Bar
     
     // Auto-detect browser language
     const userLang = navigator.language || navigator.userLanguage;
@@ -457,7 +474,32 @@
     });
   }
 
+  // --- REAL-TIME SEARCH FILTER ---
+  function filterMenu() {
+    const query = document.getElementById('menu-search').value.toLowerCase();
+    const items = document.querySelectorAll('.menu-item');
+    const titles = document.querySelectorAll('.category-title, .wine-main-title, .wine-sub-title');
+    
+    // 1. Hide/Show items based on search text
+    items.forEach(item => {
+      const text = item.innerText.toLowerCase();
+      if (text.includes(query)) {
+        item.style.display = ''; // Reverts to CSS default
+      } else {
+        item.style.display = 'none'; // Hides the item
+      }
+    });
+
+    // 2. Hide category titles if the user is typing, so the screen stays clean
+    titles.forEach(title => {
+      title.style.display = query.length > 0 ? 'none' : '';
+    });
+  }
+  
   function showTab(name, btn) {
+    // Clear search when switching tabs
+    document.getElementById('menu-search').value = '';
+    filterMenu();
     document.querySelectorAll('.menu-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('section-' + name).classList.add('active');
