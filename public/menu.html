@@ -32,8 +32,18 @@
   .tab-btn { background: transparent; border: none; color: var(--muted); padding: 16px 20px; font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight:600; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; }
   .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
 
-  .menu-section { display: none; padding: 20px 24px 80px; max-width: 740px; margin: 0 auto; }
-  .menu-section.active { display: block; animation: sectionFade 0.4s ease; }
+  .menu-section { 
+    display: none; 
+    padding: 20px 24px 60vh; /* 60vh adds a massive invisible cushion at the bottom */
+    max-width: 740px; 
+    margin: 0 auto; 
+    min-height: 100vh; /* Prevents the page from shrinking when items are hidden */
+  }
+  
+  .menu-section.active { 
+    display: block; 
+    animation: sectionFade 0.4s ease; 
+  }
   @keyframes sectionFade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
   .category-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; margin-top: 40px; border-bottom: 1px solid rgba(139,90,43,0.2); padding-bottom:10px; }
@@ -184,9 +194,9 @@
   <button class="tab-btn" onclick="showTab('desserts', this)" id="desserts-tab" style="display:none;">Desserts</button>
 </nav>
 
-<div id="search-wrapper" style="display: none; padding: 15px 24px 5px; max-width: 740px; margin: 0 auto; scroll-margin-top: 120px;">
+<div id="search-wrapper" style="display: none; padding: 15px 24px 5px; max-width: 740px; margin: 0 auto;">
   <div style="position: relative;">
-    <input type="text" id="menu-search" onfocus="setTimeout(() => document.getElementById('search-wrapper').scrollIntoView({behavior: 'smooth', block: 'start'}), 300)" oninput="filterMenu()" placeholder="Search menu..." style="width: 100%; padding: 12px 15px 12px 40px; border: 1px solid rgba(139,90,43,0.3); border-radius: 25px; background: transparent; color: var(--text); font-family: 'Montserrat', sans-serif; font-size: 14px; outline: none; box-sizing: border-box;">
+    <input type="text" id="menu-search" oninput="filterMenu()" placeholder="Search menu..." style="width: 100%; padding: 12px 15px 12px 40px; border: 1px solid rgba(139,90,43,0.3); border-radius: 25px; background: transparent; color: var(--text); font-family: 'Montserrat', sans-serif; font-size: 14px; outline: none; box-sizing: border-box;">
     <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); opacity: 0.5; font-size: 14px;">🔍</span>
   </div>
 </div>
