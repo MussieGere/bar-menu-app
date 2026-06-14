@@ -36,9 +36,12 @@ const menuItemSchema = new mongoose.Schema({
   desc_en: String,
   available: Boolean,
   image: String,
-  clicks: { type: Number, default: 0 } // NEW: Tracks item popularity
+  // --- NEW DIETARY FIELDS ---
+  isVegetarian: { type: Boolean, default: false },
+  isVegan: { type: Boolean, default: false },
+  isGlutenFree: { type: Boolean, default: false },
+  clicks: { type: Number, default: 0 }
 });
-
 const MenuItem = mongoose.model('MenuItem', menuItemSchema);
 
 // --- SEED DATABASE ON STARTUP ---
