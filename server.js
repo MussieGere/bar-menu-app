@@ -474,17 +474,38 @@ app.post('/api/menu/toggle', requireApiAdmin, async (req, res) => {
   }
 });
 
+// --- ADD NEW ITEM ---
 app.post('/api/menu/add', requireApiAdmin, async (req, res) => {
   try {
-    const newItem = new MenuItem({ 
-      id: crypto.randomBytes(4).toString('hex'), 
-      ...req.body, 
-      available: true 
+    // 1. Catch the new dietary fields from the frontend
+    const { tab, category, name, price, desc_it, desc_en, image, available, isVegetarian, isVegan, isGlutenFree } = req.body;
+    
+    // 2. Generate a secure, unique ID on the server (avoids frontend crashes)
+    const newId = require('crypto').randomBytes(4).toString('hex');
+    
+    // 3. Create the new item with all the data
+    const newItem = new MenuItem({
+      id: newId,
+      tab,
+      category,
+      name,
+      price,
+      desc_it,
+      desc_en,
+      image,
+      available,
+      isVegetarian,
+      isVegan,
+      isGlutenFree,
+      clicks: 0
     });
+
+    // 4. Save to MongoDB
     await newItem.save();
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error("Error adding item:", err);
+    res.status(500).json({ success: false, message: 'Failed to add item' });
   }
 });
 
