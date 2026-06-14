@@ -119,7 +119,14 @@ input:checked + .slider:before { transform: translateX(26px); }
       <img id="edit-image-preview" style="max-width: 150px; margin-top: 10px; border-radius: 4px; display: none;">
     </div>
     <button onclick="saveEditedItem()" style="width: 100%; padding: 12px; background: var(--gold); color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-bottom: 15px;">Save Image</button>
+
+    <div class="form-group" style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #ccc;">
+      <label>Move Item to New Section & Category</label>
+      <select id="edit-tab" style="margin-bottom: 10px;"></select>
+      <select id="edit-cat"></select>
+    </div>
     
+    <button onclick="updateItemCategory()" style="width: 100%; padding: 12px; background: #2196F3; color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-bottom: 15px;">Move Item</button>
     <div style="border-top: 1px solid #ddd; padding-top: 15px; margin-top: 15px;">
       <button onclick="deleteItem()" style="width: 100%; padding: 12px; background: #d32f2f; color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-bottom: 10px;">🗑️ Delete Item</button>
       <button onclick="cancelEdit()" style="width: 100%; padding: 12px; background: #ccc; color: #333; border: none; font-weight: 600; cursor: pointer; border-radius: 4px;">Cancel</button>
@@ -275,24 +282,43 @@ input:checked + .slider:before { transform: translateX(26px); }
     
     const resultsDiv = document.getElementById('edit-search-results');
     resultsDiv.innerHTML = results.map(item => `
-      <div style="padding: 10px; background: #f9f9f9; margin: 5px 0; border-radius: 4px; cursor: pointer; border-left: 3px solid var(--gold);" onclick="selectItemForEdit('${item.id}', '${item.name}', '${item.image || ''}')">
+      <div style="padding: 10px; background: #f9f9f9; margin: 5px 0; border-radius: 4px; cursor: pointer; border-left: 3px solid var(--gold);" onclick="selectItemForEdit('${item.id}', '${item.name.replace(/'/g, "\\'")}', '${item.image || ''}', '${item.tab}', '${item.category}')">
         <strong>${item.name}</strong> - ${item.category} <span style="color: #999;">${item.price}</span>
       </div>
     `).join('');
   });
 
-  function selectItemForEdit(id, name, currentImage) {
+  function selectItemForEdit(id, name, currentImage, currentTab, currentCategory) {
     currentEditItem = id;
     document.getElementById('edit-item-name').innerText = `Editing: ${name}`;
     document.getElementById('edit-item-form').style.display = 'block';
     document.getElementById('edit-image-file').value = '';
     document.getElementById('edit-price-input').value = '';
     
+    // Populate Tab options
+    const tabSelect = document.getElementById('edit-tab');
+    tabSelect.innerHTML = `
+      <option value="bar">Bar & Caffetteria</option>
+      <option value="food">Pizza & Sandwiches</option>
+      <option value="restaurant">Ristorante</option>
+      <option value="cocktails">Cocktails & Spirits</option>
+      <option value="wine">Wine</option>
+      <option value="desserts">Desserts</option>
+    `;
+    tabSelect.value = currentTab || 'food';
+    
+    // Trigger category load based on the tab
+    tabSelect.dispatchEvent(new Event('change'));
+    
+    // Set the current category after a tiny delay so the options can generate
+    setTimeout(() => {
+      document.getElementById('edit-cat').value = currentCategory;
+    }, 50);
+
     // Get current price from menu
     fetch('/api/menu').then(res => res.json()).then(menu => {
       const item = menu.find(i => i.id === id);
       if (item) {
-        // Extract price without euro sign
         const priceStr = item.price.replace('€ ', '').trim();
         document.getElementById('edit-price-input').value = priceStr;
       }
@@ -471,6 +497,23 @@ input:checked + .slider:before { transform: translateX(26px); }
       `;
     }).join('');
   }
+
+  async function updateItemCategory() {
+    if (!currentEditItem) return;
+    
+    const newTab = document.getElementById('edit-tab').value;
+    const newCat = document.getElementById('edit-cat').value;
+    
+    await fetch('/api/menu/update-category', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: currentEditItem, tab: newTab, category: newCat })
+    });
+    
+    alert('Item moved successfully!');
+    cancelEdit();
+    loadMenu();
+  }
   
   // Add Item with Duplicate Prevention
   document.getElementById('addForm').addEventListener('submit', async (e) => {
@@ -601,6 +644,20 @@ input:checked + .slider:before { transform: translateX(26px); }
 
   // Trigger it once on load so it sets up the initial "Food" categories
   document.getElementById('f-tab').dispatchEvent(new Event('change'));
+
+  document.getElementById('edit-tab').addEventListener('change', function() {
+    const selectedSection = this.value;
+    const catSelect = document.getElementById('edit-cat');
+    catSelect.innerHTML = '';
+    if (categoryMapping[selectedSection]) {
+      categoryMapping[selectedSection].forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        catSelect.appendChild(option);
+      });
+    }
+  });
   
   loadQr();
   loadMenu('bar');
