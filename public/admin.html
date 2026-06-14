@@ -612,11 +612,11 @@ input:checked + .slider:before { transform: translateX(26px); }
     }
     
     const newItem = {
-        id: crypto.randomUUID(),
+        // We removed the frontend ID generator to let the backend handle it safely
         tab: document.getElementById('f-tab').value,
         category: document.getElementById('f-category').value,
         name: document.getElementById('f-name').value,
-        price: document.getElementById('f-price').value,
+        price: '€ ' + document.getElementById('f-price').value, // Restored the Euro sign!
         desc_it: document.getElementById('f-desc-it').value,
         desc_en: document.getElementById('f-desc-en').value,
         image: imagePath,
