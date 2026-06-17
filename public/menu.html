@@ -422,18 +422,32 @@
   }
 
   async function fetchMenu() {
-    // Fetch the menu AND the boss's custom display order simultaneously
-    const [menuRes, orderRes] = await Promise.all([
-      fetch('/api/menu'),
-      fetch('/api/settings/category-order')
-    ]);
-    
-    const menuData = await menuRes.json();
-    const dbOrder = await orderRes.json();
-    
-    container.innerHTML = '';
-    
-    const menuType = getMenuType();
+    try {
+      // 1. Fetch the actual food items first (This must succeed)
+      const menuRes = await fetch('/api/menu');
+      if (!menuRes.ok) throw new Error("Failed to load menu data");
+      const menuData = await menuRes.json();
+      
+      // 2. Fetch the boss's custom order safely
+      // If this fails, it just skips it and shows the menu normally!
+      let dbOrder = null;
+      try {
+        const orderRes = await fetch('/api/settings/category-order');
+        if (orderRes.ok) {
+          dbOrder = await orderRes.json();
+        }
+      } catch (err) {
+        console.warn("Could not load category order, falling back to default.");
+      }
+
+      // 3. Figure out which QR code was scanned
+      const urlParams = new URLSearchParams(window.location.search);
+      const menuType = urlParams.get('menu');
+      
+      const container = document.getElementById('dynamic-menu-container');
+      container.innerHTML = ''; // Clear out the loading text
+      
+      // ... KEEP ALL YOUR EXISTING CODE FROM HERE DOWN ...
     let tabs = ['bar', 'food', 'restaurant', 'cocktails'];
     let firstTab = 'bar';
     
