@@ -44,6 +44,13 @@ const menuItemSchema = new mongoose.Schema({
 });
 const MenuItem = mongoose.model('MenuItem', menuItemSchema);
 
+// --- SETTINGS SCHEMA FOR LAYOUT & ORDER ---
+const settingsSchema = new mongoose.Schema({
+  key: { type: String, unique: true },
+  value: mongoose.Schema.Types.Mixed
+});
+const Settings = mongoose.model('Settings', settingsSchema);
+
 // --- SEED DATABASE ON STARTUP ---
 // Paste your ENTIRE existing menuDatabase array here:
 const initialMenuDatabase = [
@@ -457,6 +464,30 @@ app.get('/api/menu', async (req, res) => {
     res.json(menu);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch menu' });
+  }
+});
+
+// --- GET CATEGORY ORDER ---
+app.get('/api/settings/category-order', async (req, res) => {
+  try {
+    const setting = await Settings.findOne({ key: 'categoryOrder' });
+    res.json(setting ? setting.value : null);
+  } catch (err) {
+    res.status(500).json(null);
+  }
+});
+
+// --- SAVE CATEGORY ORDER ---
+app.post('/api/settings/category-order', requireApiAdmin, async (req, res) => {
+  try {
+    await Settings.findOneAndUpdate(
+      { key: 'categoryOrder' },
+      { value: req.body },
+      { upsert: true, new: true } // Upsert creates it if it doesn't exist yet
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
   }
 });
 
