@@ -472,15 +472,6 @@ async function fetchMenu() {
         // --- CUSTOM WINE MENU RENDERING ---
         const mainCats = [...new Set(tabItems.map(i => i.category.split(' - ')[0]))];
         
-        if (dbOrder && dbOrder['wine']) {
-          const orderedMainCats = [...new Set(dbOrder['wine'].map(c => c.split(' - ')[0]))];
-          mainCats = orderedMainCats.filter(c => presentMainCats.includes(c));
-          // Catch any new categories that aren't in the DB order yet
-          presentMainCats.forEach(c => { if(!mainCats.includes(c)) mainCats.push(c); });
-        } else {
-          mainCats = presentMainCats;
-        }
-        
         mainCats.forEach(mainCat => {
           html += `<div class="wine-main-title">${mainCat}</div>`;
           const subCats = [...new Set(tabItems.filter(i => i.category.startsWith(mainCat)).map(i => i.category.split(' - ')[1] || ''))];
@@ -536,13 +527,6 @@ async function fetchMenu() {
         // --- STANDARD MENU RENDERING ---
         const categories = [...new Set(tabItems.map(i => i.category))];
         
-        if (dbOrder && dbOrder[tab]) {
-          categories = dbOrder[tab].filter(c => presentCategories.includes(c));
-          // Catch any new categories that aren't in the DB order yet
-          presentCategories.forEach(c => { if(!categories.includes(c)) categories.push(c); });
-        } else {
-          categories = presentCategories;
-        }
         categories.forEach(cat => {
           html += `<div class="category-title">${cat}</div>`;
           tabItems.filter(i => i.category === cat).forEach(item => {
