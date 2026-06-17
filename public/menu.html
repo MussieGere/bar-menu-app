@@ -421,31 +421,16 @@
     startTimer();
   }
 
-  async function fetchMenu() {
+async function fetchMenu() {
     try {
-      // 1. Fetch the actual food items first (This must succeed)
-      const menuRes = await fetch('/api/menu');
-      if (!menuRes.ok) throw new Error("Failed to load menu data");
-      const menuData = await menuRes.json();
+      const res = await fetch('/api/menu');
+      const menuData = await res.json();
       
-      // 2. Fetch the boss's custom order safely
-      // If this fails, it just skips it and shows the menu normally!
-      let dbOrder = null;
-      try {
-        const orderRes = await fetch('/api/settings/category-order');
-        if (orderRes.ok) {
-          dbOrder = await orderRes.json();
-        }
-      } catch (err) {
-        console.warn("Could not load category order, falling back to default.");
-      }
-
-      // 3. Figure out which QR code was scanned
       const urlParams = new URLSearchParams(window.location.search);
       const menuType = urlParams.get('menu');
       
       const container = document.getElementById('dynamic-menu-container');
-      container.innerHTML = ''; // Clear out the loading text
+      container.innerHTML = ''
       
       // ... KEEP ALL YOUR EXISTING CODE FROM HERE DOWN ...
     let tabs = ['bar', 'food', 'restaurant', 'cocktails'];
@@ -486,9 +471,7 @@
       
       if (tab === 'wine') {
         // --- CUSTOM WINE MENU RENDERING ---
-        // Check for Boss's custom order, otherwise fallback to random database order
-        let mainCats = [];
-        const presentMainCats = [...new Set(tabItems.map(i => i.category.split(' - ')[0]))];
+        const mainCats = [...new Set(tabItems.map(i => i.category.split(' - ')[0]))];
         
         if (dbOrder && dbOrder['wine']) {
           const orderedMainCats = [...new Set(dbOrder['wine'].map(c => c.split(' - ')[0]))];
@@ -552,9 +535,7 @@
         });
       } else {
         // --- STANDARD MENU RENDERING ---
-        // Check for Boss's custom order, otherwise fallback to random database order
-        let categories = [];
-        const presentCategories = [...new Set(tabItems.map(i => i.category))];
+        const categories = [...new Set(tabItems.map(i => i.category))];
         
         if (dbOrder && dbOrder[tab]) {
           categories = dbOrder[tab].filter(c => presentCategories.includes(c));
