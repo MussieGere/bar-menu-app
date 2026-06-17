@@ -94,6 +94,24 @@ input:checked + .slider:before { transform: translateX(26px); }
   </button>
 </div>
 
+<div id="panel-reorder" class="panel" style="display:none;">
+  <h2>Reorder Menu Categories</h2>
+  <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Use the arrows to change the display order of categories on the customer menu.</p>
+  
+  <select id="reorder-tab" onchange="renderReorderList()" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid rgba(139,90,43,0.3); border-radius: 4px; font-family: 'Montserrat', sans-serif; outline: none;">
+    <option value="bar">Bar & Caffetteria</option>
+    <option value="food">Pizza & Sandwiches</option>
+    <option value="restaurant">Ristorante</option>
+    <option value="cocktails">Cocktails & Spirits</option>
+    <option value="wine">Wine</option>
+    <option value="desserts">Desserts</option>
+  </select>
+
+  <div id="reorder-list"></div>
+
+  <button onclick="saveCategoryOrder()" style="width: 100%; padding: 12px; background: #8B5A2B; color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-top: 20px;">Save Display Order</button>
+</div>
+
 <div id="panel-manage" class="panel">
   <h2>Current Menu</h2>
   <div class="nav-tabs" id="manage-tabs" style="background: white; border: none; margin-bottom: 20px; padding: 0;">
@@ -203,24 +221,6 @@ input:checked + .slider:before { transform: translateX(26px); }
     </div>
     <button type="submit" class="btn-submit">Add to Menu</button>
   </form>
-</div>
-
-<div id="panel-reorder" class="panel" style="display:none;">
-  <h2>Reorder Menu Categories</h2>
-  <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Use the arrows to change the display order of categories on the customer menu.</p>
-  
-  <select id="reorder-tab" onchange="renderReorderList()" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid rgba(139,90,43,0.3); border-radius: 4px; font-family: 'Montserrat', sans-serif; outline: none;">
-    <option value="bar">Bar & Caffetteria</option>
-    <option value="food">Pizza & Sandwiches</option>
-    <option value="restaurant">Ristorante</option>
-    <option value="cocktails">Cocktails & Spirits</option>
-    <option value="wine">Wine</option>
-    <option value="desserts">Desserts</option>
-  </select>
-
-  <div id="reorder-list"></div>
-
-  <button onclick="saveCategoryOrder()" style="width: 100%; padding: 12px; background: #8B5A2B; color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-top: 20px;">Save Display Order</button>
 </div>
   
 <script>
