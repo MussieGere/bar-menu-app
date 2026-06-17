@@ -60,6 +60,7 @@ input:checked + .slider:before { transform: translateX(26px); }
   <button class="tab-btn" onclick="switchTab('edit')">Edit Item / Add Image</button>
   <button class="tab-btn" onclick="switchTab('add')">Add Item</button>
   <button class="tab-btn" onclick="switchTab('analytics'); loadAnalytics();">Analytics</button>
+  <button class="tab-btn" onclick="switchTab('reorder'); renderReorderList();">Category Order</button>
 </div>
 
 <div id="panel-qr" class="panel active qr-box">
@@ -204,6 +205,24 @@ input:checked + .slider:before { transform: translateX(26px); }
   </form>
 </div>
 
+<div id="panel-reorder" class="panel" style="display:none;">
+  <h2>Reorder Menu Categories</h2>
+  <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Use the arrows to change the display order of categories on the customer menu.</p>
+  
+  <select id="reorder-tab" onchange="renderReorderList()" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid rgba(139,90,43,0.3); border-radius: 4px; font-family: 'Montserrat', sans-serif; outline: none;">
+    <option value="bar">Bar & Caffetteria</option>
+    <option value="food">Pizza & Sandwiches</option>
+    <option value="restaurant">Ristorante</option>
+    <option value="cocktails">Cocktails & Spirits</option>
+    <option value="wine">Wine</option>
+    <option value="desserts">Desserts</option>
+  </select>
+
+  <div id="reorder-list"></div>
+
+  <button onclick="saveCategoryOrder()" style="width: 100%; padding: 12px; background: #8B5A2B; color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-top: 20px;">Save Display Order</button>
+</div>
+  
 <script>
   function switchTab(tab) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -563,6 +582,55 @@ input:checked + .slider:before { transform: translateX(26px); }
     cancelEdit();
     loadMenu();
   }
+
+  // 1. Fetch saved order on load
+  async function loadCategoryMapping() {
+    try {
+      const res = await fetch('/api/settings/category-order');
+      const data = await res.json();
+      if (data) categoryMapping = data; // Overwrite hardcoded list with DB list
+    } catch (err) { console.error("Could not load category order."); }
+  }
+  loadCategoryMapping(); // Run immediately
+
+  // 2. Draw the list with arrows
+  function renderReorderList() {
+    const tab = document.getElementById('reorder-tab').value;
+    const listDiv = document.getElementById('reorder-list');
+    const cats = categoryMapping[tab] || [];
+
+    listDiv.innerHTML = cats.map((cat, index) => `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f9f9f9; border: 1px solid #ddd; margin-bottom: 5px; border-radius: 4px;">
+        <strong style="font-family: 'Montserrat', sans-serif; font-size: 14px;">${cat}</strong>
+        <div>
+          <button onclick="moveCategory('${tab}', ${index}, -1)" ${index === 0 ? 'disabled' : ''} style="padding: 5px 10px; cursor: pointer; border: 1px solid #ccc; background: white; border-radius: 4px;">⬆️</button>
+          <button onclick="moveCategory('${tab}', ${index}, 1)" ${index === cats.length - 1 ? 'disabled' : ''} style="padding: 5px 10px; cursor: pointer; border: 1px solid #ccc; background: white; border-radius: 4px; margin-left: 5px;">⬇️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // 3. Shift items up or down
+  function moveCategory(tab, index, direction) {
+    const cats = categoryMapping[tab];
+    const temp = cats[index];
+    cats[index] = cats[index + direction];
+    cats[index + direction] = temp;
+    renderReorderList(); // Redraw instantly
+  }
+
+  // 4. Send updated order to MongoDB
+  async function saveCategoryOrder() {
+    try {
+      const res = await fetch('/api/settings/category-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(categoryMapping)
+      });
+      if (res.ok) alert('✅ Category display order saved successfully!');
+      else alert('❌ Failed to save order.');
+    } catch (e) { alert('❌ Error saving to database.'); }
+  }
   
   // Add Item with Duplicate Prevention
   document.getElementById('addForm').addEventListener('submit', async (e) => {
@@ -633,7 +701,7 @@ input:checked + .slider:before { transform: translateX(26px); }
   });
 
   // --- DYNAMIC CATEGORY DROPDOWN LOGIC ---
-  const categoryMapping = {
+  let categoryMapping = {
     'bar': [
       'Colazione / Breakfast',
       'Birre / Beers', 
