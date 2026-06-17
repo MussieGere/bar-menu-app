@@ -422,9 +422,15 @@
   }
 
   async function fetchMenu() {
-    const res = await fetch('/api/menu');
-    const menuData = await res.json();
-    const container = document.getElementById('dynamic-menu-container');
+    // Fetch the menu AND the boss's custom display order simultaneously
+    const [menuRes, orderRes] = await Promise.all([
+      fetch('/api/menu'),
+      fetch('/api/settings/category-order')
+    ]);
+    
+    const menuData = await menuRes.json();
+    const dbOrder = await orderRes.json();
+    
     container.innerHTML = '';
     
     const menuType = getMenuType();
@@ -466,7 +472,18 @@
       
       if (tab === 'wine') {
         // --- CUSTOM WINE MENU RENDERING ---
-        const mainCats = [...new Set(tabItems.map(i => i.category.split(' - ')[0]))];
+        // Check for Boss's custom order, otherwise fallback to random database order
+        let mainCats = [];
+        const presentMainCats = [...new Set(tabItems.map(i => i.category.split(' - ')[0]))];
+        
+        if (dbOrder && dbOrder['wine']) {
+          const orderedMainCats = [...new Set(dbOrder['wine'].map(c => c.split(' - ')[0]))];
+          mainCats = orderedMainCats.filter(c => presentMainCats.includes(c));
+          // Catch any new categories that aren't in the DB order yet
+          presentMainCats.forEach(c => { if(!mainCats.includes(c)) mainCats.push(c); });
+        } else {
+          mainCats = presentMainCats;
+        }
         
         mainCats.forEach(mainCat => {
           html += `<div class="wine-main-title">${mainCat}</div>`;
@@ -521,7 +538,17 @@
         });
       } else {
         // --- STANDARD MENU RENDERING ---
-        const categories = [...new Set(tabItems.map(i => i.category))];
+        // Check for Boss's custom order, otherwise fallback to random database order
+        let categories = [];
+        const presentCategories = [...new Set(tabItems.map(i => i.category))];
+        
+        if (dbOrder && dbOrder[tab]) {
+          categories = dbOrder[tab].filter(c => presentCategories.includes(c));
+          // Catch any new categories that aren't in the DB order yet
+          presentCategories.forEach(c => { if(!categories.includes(c)) categories.push(c); });
+        } else {
+          categories = presentCategories;
+        }
         categories.forEach(cat => {
           html += `<div class="category-title">${cat}</div>`;
           tabItems.filter(i => i.category === cat).forEach(item => {
