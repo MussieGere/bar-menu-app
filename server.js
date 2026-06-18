@@ -711,8 +711,32 @@ app.get('/api/run-restaurant-fix', async (req, res) => {
       { tab: 'restaurant', category: 'Secondi Piatti / Main Courses', name: 'Cotoletta di pollo', price: '€ 9,50', desc_it: 'cotoletta di pollo', desc_en: 'chicken cutlet', desc_es: 'chuleta de pollo empanada', desc_de: 'Hähnchenschnitzel', desc_fr: 'escalope de poulet panée', isVegetarian: false, isVegan: false, isGlutenFree: false },
       { tab: 'restaurant', category: 'Secondi Piatti / Main Courses', name: 'Bistecca ai ferri', price: '€ 12,00', desc_it: 'bistecca ai ferri', desc_en: 'grilled steak', desc_es: 'filete a la parrilla', desc_de: 'gegrilltes Steak', desc_fr: 'steak grillé', isVegetarian: false, isVegan: false, isGlutenFree: true },
       { tab: 'restaurant', category: 'Secondi Piatti / Main Courses', name: 'Petto di pollo grigliato', price: '€ 9,00', desc_it: 'petto di pollo grigliato', desc_en: 'grilled chicken breast', desc_es: 'pechuga de pollo a la parrilla', desc_de: 'gegrillte Hähnchenbrust', desc_fr: 'blanc de poulet grillé', isVegetarian: false, isVegan: false, isGlutenFree: true },
-      { tab: 'restaurant', category: 'Secondi Piatti / Main Courses', name: 'Arrosto misto carne, salsiccia, polpetta', price: '€ 15,00', desc_it: 'arrosto misto carne, salsiccia, polpetta', desc_en: 'grilled steak, sausage, meatball',
+      { tab: 'restaurant', category: 'Secondi Piatti / Main Courses', name: 'Arrosto misto carne, salsiccia, polpetta', price: '€ 15,00', desc_it: 'arrosto misto carne, salsiccia, polpetta', desc_en: 'grilled steak, sausage, meatball', desc_es: 'parrillada mixta de carne, salchicha, albóndiga', desc_de: 'gemischter Grillteller, Wurst, Fleischbällchen', desc_fr: 'grillades mixtes, saucisse, boulette de viande', isVegetarian: false, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Secondi Piatti / Main Courses', name: 'Polpette in salsa di pomodoro con ricotta salata', price: '€ 10,00', desc_it: 'polpette in salsa di pomodoro con ricotta salata', desc_en: 'tomato sauce meatballs with dried ricotta cheese', desc_es: 'albóndigas en salsa de tomate con queso ricotta salado', desc_de: 'Fleischbällchen in Tomatensoße mit gesalzenem Ricotta', desc_fr: 'boulettes de viande sauce tomate avec ricotta salée', isVegetarian: false, isVegan: false, isGlutenFree: false },
 
+      // --- CONTORNI / SIDE DISHES ---
+      { tab: 'restaurant', category: 'Contorni / Side dishes', name: 'Patate al forno', price: '€ 5,00', desc_it: 'patate al forno', desc_en: 'baked potatoes', desc_es: 'patatas asadas', desc_de: 'Ofenkartoffeln', desc_fr: 'pommes de terre au four', isVegetarian: true, isVegan: true, isGlutenFree: true },
+      { tab: 'restaurant', category: 'Contorni / Side dishes', name: 'Patatine fritte', price: '€ 4,00', desc_it: 'patatine fritte', desc_en: 'french fries', desc_es: 'patatas fritas', desc_de: 'Pommes Frites', desc_fr: 'frites', isVegetarian: true, isVegan: true, isGlutenFree: true },
+      { tab: 'restaurant', category: 'Contorni / Side dishes', name: 'Caponata', price: '€ 8,00', desc_it: 'melanzane, peperoni, cipolla, olive nere, olio d\'oliva', desc_en: 'eggplants, peppers, onion, black olives, olive oil', desc_es: 'berenjenas, pimientos, cebolla, aceitunas negras, aceite de oliva', desc_de: 'Auberginen, Paprika, Zwiebeln, schwarze Oliven, Olivenöl', desc_fr: 'aubergines, poivrons, oignon, olives noires, huile d\'olive', isVegetarian: true, isVegan: true, isGlutenFree: true },
+      { tab: 'restaurant', category: 'Contorni / Side dishes', name: 'Verdure grigliate', price: '€ 8,50', desc_it: 'melanzane, zucchine', desc_en: 'eggplants, zucchini', desc_es: 'berenjenas y calabacines asados', desc_de: 'gegrillte Auberginen und Zucchini', desc_fr: 'aubergines et courgettes grillées', isVegetarian: true, isVegan: true, isGlutenFree: true },
+      { tab: 'restaurant', category: 'Contorni / Side dishes', name: 'Insalata della nonna', price: '€ 7,00', desc_it: 'pomodoro, cipolla rossa, ricotta salata', desc_en: 'tomato, red onion, dried ricotta cheese', desc_es: 'tomate, cebolla roja, queso ricotta salado', desc_de: 'Tomate, rote Zwiebel, gesalzener Ricotta', desc_fr: 'tomate, oignon rouge, ricotta salée', isVegetarian: true, isVegan: false, isGlutenFree: true }
+    ];
+
+    let createdCount = 0;
+
+    for (let item of restaurantItems) {
+      item.id = crypto.randomBytes(4).toString('hex');
+      item.available = true;
+      await new MenuItem(item).save();
+      createdCount++;
+    }
+
+    res.send(`<h1>✅ Ristorante Fix Complete!</h1><p>Deleted all messy previous entries.<br>Freshly created all ${createdCount} exact menu items with 5 perfect languages.</p><p>Go check the Restaurant tab now!</p>`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(`<h1>❌ Error:</h1><p>${err.message}</p>`);
+  }
+});
 // --- PAGE ROUTING ---
 app.get('/', (req, res) => res.redirect('/admin.html'));
 app.get('/admin', (req, res) => res.redirect('/admin.html'));
