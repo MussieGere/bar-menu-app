@@ -289,12 +289,18 @@ const i18n = {
   fr: { search: "Rechercher...", bar: "Bar & Café", food: "Pizza & Sandwichs", restaurant: "Restaurant", cocktails: "Cocktails", wine: "Carte des Vins", desserts: "Desserts", sessionExp: "Session Expirée", sessionExpDesc: "Votre accès a expiré. Veuillez scanner à nouveau le code QR sur votre table.", subtitle: "Taormina, Sicile" }
 };
   
-// --- 2. BULLETPROOF LANGUAGE SWITCHER ---
 function setLanguage(lang) {
   const t = i18n[lang] || i18n['en'];
 
-  // Translate the top UI tabs
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  // 1. Find out EXACTLY which tab is active BEFORE translating
+  let activeIndex = 0;
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach((btn, index) => {
+    if (btn.classList.contains('active')) activeIndex = index;
+  });
+
+  // 2. Translate the top UI tabs
+  tabs.forEach(btn => {
     const text = btn.innerText.toUpperCase();
     if (text.includes('BAR') || text.includes('CAFE') || text.includes('CAFFÈ')) btn.innerText = t.bar;
     if (text.includes('PIZZA') || text.includes('PANINI') || text.includes('SANDWICH')) btn.innerText = t.food;
@@ -321,8 +327,11 @@ function setLanguage(lang) {
     expGate.querySelector('p').innerText = t.sessionExpDesc;
   }
 
-  // INSTANTLY redraw the menu content from cache (NO NETWORK DELAY)
+  // 3. INSTANTLY redraw the menu content from cache
   renderMenu();
+
+  // 4. Force the active tab to click itself so it doesn't jump to Bar!
+  if (tabs[activeIndex]) tabs[activeIndex].click();
 }
 
   function getToken() { return new URLSearchParams(window.location.search).get('token'); }
