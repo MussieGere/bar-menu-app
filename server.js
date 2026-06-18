@@ -674,181 +674,44 @@ app.get('/api/fix-languages', async (req, res) => {
   }
 });
 
-// --- TEMPORARY BULK UPDATE SCRIPT BATCH 3: STARTERS & KITCHEN ---
-app.get('/api/run-bulk-batch3', async (req, res) => {
+// --- RESTAURANT TAB ONLY: PERFECT REBUILD SCRIPT ---
+app.get('/api/run-restaurant-fix', async (req, res) => {
   try {
     const crypto = require('crypto');
     
-    const menuItems = [
+    // 1. WIPE OUT ALL PREVIOUS RESTAURANT ITEMS TO PREVENT DUPLICATES
+    await MenuItem.deleteMany({ tab: 'restaurant' });
+    await MenuItem.deleteMany({ category: /Cousers/ }); // Catch the previous typos
+    await MenuItem.deleteMany({ category: /Startes/ }); 
+
+    const restaurantItems = [
       // --- ANTIPASTI / STARTERS ---
-      {
-        tab: 'food', category: 'Antipasti / Startes', name: 'Tagliere di salumi e formaggi', price: '€ 15,00',
-        desc_it: 'tagliere di salumi e formaggi', desc_en: 'cured meats and cheeses plate', desc_es: 'tabla de embutidos y quesos', desc_de: 'Aufschnitt- und Käseplatte', desc_fr: 'plateau de charcuterie et fromages',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Antipasti / Startes', name: 'Parmigiana', price: '€ 7,50',
-        desc_it: 'melanzane, salsa, mozzarella, basilico, parmigiano', desc_en: 'eggplants, tomato sauce, mozzarella cheese, basil, parmesan cheese', desc_es: 'berenjenas, salsa de tomate, queso mozzarella, albahaca, queso parmesano', desc_de: 'Auberginen, Tomatensoße, Mozzarella, Basilikum, Parmesankäse', desc_fr: 'aubergines, sauce tomate, mozzarella, basilic, parmesan',
-        isVegetarian: true, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Antipasti / Startes', name: 'Bruschetta', price: '€ 6,00',
-        desc_it: 'pomodoro, olio d\'oliva, basilico, origano', desc_en: 'tomatoes cubes, olive oil, basil, oregano', desc_es: 'cubos de tomate, aceite de oliva, albahaca, orégano', desc_de: 'Tomatenwürfel, Olivenöl, Basilikum, Oregano', desc_fr: 'dés de tomates, huile d\'olive, basilic, origan',
-        isVegetarian: true, isVegan: true, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Antipasti / Startes', name: 'Bruschetta nettuno', price: '€ 7,50',
-        desc_it: 'formaggio spalmabile, acciughe, miele', desc_en: 'cream cheese, anchovies, honey', desc_es: 'queso crema, anchoas, miel', desc_de: 'Frischkäse, Sardellen, Honig', desc_fr: 'fromage à tartiner, anchois, miel',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Antipasti / Startes', name: 'Bruschetta venere', price: '€ 7,00',
-        desc_it: 'pomodoro, cipolla rossa, ricotta salata, basilico', desc_en: 'tomato, red onion, dried ricotta cheese, basil', desc_es: 'tomate, cebolla roja, queso ricotta salado, albahaca', desc_de: 'Tomate, rote Zwiebel, gesalzener Ricotta, Basilikum', desc_fr: 'tomate, oignon rouge, ricotta salée, basilic',
-        isVegetarian: true, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Antipasti / Startes', name: 'Bruschetta efesto', price: '€ 6,50',
-        desc_it: 'pomodoro, olio piccante, peperoncino, basilico, origano', desc_en: 'tomato, spicy oil, chili pepper, basil, oregano', desc_es: 'tomate, aceite picante, chile, albahaca, orégano', desc_de: 'Tomate, scharfes Öl, Chili, Basilikum, Oregano', desc_fr: 'tomate, huile pimentée, piment, basilic, origan',
-        isVegetarian: true, isVegan: true, isGlutenFree: false, available: true
-      },
+      { tab: 'restaurant', category: 'Antipasti / Starters', name: 'Tagliere di salumi e formaggi', price: '€ 15,00', desc_it: 'tagliere di salumi e formaggi', desc_en: 'cured meats and cheeses plate', desc_es: 'tabla de embutidos y quesos', desc_de: 'Aufschnitt- und Käseplatte', desc_fr: 'plateau de charcuterie et fromages', isVegetarian: false, isVegan: false, isGlutenFree: true },
+      { tab: 'restaurant', category: 'Antipasti / Starters', name: 'Parmigiana', price: '€ 7,50', desc_it: 'melanzane, salsa, mozzarella, basilico, parmigiano', desc_en: 'eggplants, tomato sauce, mozzarella cheese, basil, parmesan cheese', desc_es: 'berenjenas, salsa de tomate, queso mozzarella, albahaca, queso parmesano', desc_de: 'Auberginen, Tomatensoße, Mozzarella, Basilikum, Parmesankäse', desc_fr: 'aubergines, sauce tomate, mozzarella, basilic, parmesan', isVegetarian: true, isVegan: false, isGlutenFree: true },
+      { tab: 'restaurant', category: 'Antipasti / Starters', name: 'Bruschetta', price: '€ 6,00', desc_it: 'pomodoro, olio d\'oliva, basilico, origano', desc_en: 'tomatoes cubes, olive oil, basil, oregano', desc_es: 'dados de tomate, aceite de oliva, albahaca, orégano', desc_de: 'Tomatenwürfel, Olivenöl, Basilikum, Oregano', desc_fr: 'dés de tomates, huile d\'olive, basilic, origan', isVegetarian: true, isVegan: true, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Antipasti / Starters', name: 'Bruschetta nettuno', price: '€ 7,50', desc_it: 'formaggio spalmabile, acciughe, miele', desc_en: 'cream cheese, anchovies, honey', desc_es: 'queso crema, anchoas, miel', desc_de: 'Frischkäse, Sardellen, Honig', desc_fr: 'fromage à tartiner, anchois, miel', isVegetarian: false, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Antipasti / Starters', name: 'Bruschetta venere', price: '€ 7,00', desc_it: 'pomodoro, cipolla rossa, ricotta salata, basilico', desc_en: 'tomato, red onion, dried ricotta cheese, basil', desc_es: 'tomate, cebolla roja, queso ricotta salado, albahaca', desc_de: 'Tomate, rote Zwiebel, gesalzener Ricotta, Basilikum', desc_fr: 'tomate, oignon rouge, ricotta salée, basilic', isVegetarian: true, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Antipasti / Starters', name: 'Bruschetta efesto', price: '€ 6,50', desc_it: 'pomodoro, olio piccante, peperoncino, basilico, origano', desc_en: 'tomato, spicy oil, chili pepper, basil, oregano', desc_es: 'tomate, aceite picante, chile, albahaca, orégano', desc_de: 'Tomate, scharfes Öl, Chili, Basilikum, Oregano', desc_fr: 'tomate, huile pimentée, piment, basilic, origan', isVegetarian: true, isVegan: true, isGlutenFree: false },
 
       // --- PRIMI PIATTI / FIRST COURSES ---
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Lasagne al ragù', price: '€ 8,50',
-        desc_it: 'lasagna, ragù di carne, besciamella, mozzarella, parmigiano', desc_en: 'lasagna pasta, meat ragout, béchamel, mozzarella cheese, parmesan cheese', desc_es: 'pasta lasaña, ragú de carne, bechamel, queso mozzarella, parmesano', desc_de: 'Lasagne-Nudeln, Fleischragout, Béchamelsauce, Mozzarella, Parmesan', desc_fr: 'pâtes à lasagnes, ragoût de viande, béchamel, mozzarella, parmesan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Gnocchi al pomodoro', price: '€ 8,00',
-        desc_it: 'gnocchi, pomodoro', desc_en: 'potato gnocchi and tomato sauce', desc_es: 'ñoquis de patata con salsa de tomate', desc_de: 'Kartoffelgnocchi mit Tomatensoße', desc_fr: 'gnocchis de pommes de terre à la sauce tomate',
-        isVegetarian: true, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Tortellini alfredo', price: '€ 10,00',
-        desc_it: 'parmigiano, burro, prosciutto, panna, pepe', desc_en: 'parmesan cheese, butter, ham, cream, pepper', desc_es: 'queso parmesano, mantequilla, jamón, nata, pimienta', desc_de: 'Parmesankäse, Butter, Schinken, Sahne, Pfeffer', desc_fr: 'parmesan, beurre, jambon, crème, poivre',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Pasta Carbonara', price: '€ 11,00',
-        desc_it: 'guanciale, uova, parmigiano, pepe', desc_en: 'bacon, eggs, parmesan cheese, pepper', desc_es: 'tocino, huevos, queso parmesano, pimienta', desc_de: 'Speck, Eier, Parmesankäse, Pfeffer', desc_fr: 'lard, œufs, parmesan, poivre',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Pasta Arrabbiata', price: '€ 9,00',
-        desc_it: 'salsa piccante al pomodoro', desc_en: 'spicy tomato sauce', desc_es: 'salsa de tomate picante', desc_de: 'scharfe Tomatensoße', desc_fr: 'sauce tomate piquante',
-        isVegetarian: true, isVegan: true, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Pasta Amatriciana', price: '€ 10,00',
-        desc_it: 'salsa di pomodoro, guanciale, parmigiano', desc_en: 'tomato sauce, bacon, parmesan cheese', desc_es: 'salsa de tomate, tocino, queso parmesano', desc_de: 'Tomatensoße, Speck, Parmesankäse', desc_fr: 'sauce tomate, lard, parmesan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Pasta Salmone', price: '€ 12,00',
-        desc_it: 'salmone affumicato, panna, salsa di pomodoro', desc_en: 'smoked salmon, cream, tomato sauce', desc_es: 'salmón ahumado, nata, salsa de tomate', desc_de: 'Räucherlachs, Sahne, Tomatensoße', desc_fr: 'saumon fumé, crème, sauce tomate',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Pasta Norma', price: '€ 12,00',
-        desc_it: 'salsa di pomodoro, melanzane fritte, ricotta salata', desc_en: 'tomato sauce, fried eggplants, dried ricotta cheese', desc_es: 'salsa de tomate, berenjenas fritas, queso ricotta salado', desc_de: 'Tomatensoße, frittierte Auberginen, gesalzener Ricotta', desc_fr: 'sauce tomate, aubergines frites, ricotta salée',
-        isVegetarian: true, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Carbonara di zucchine', price: '€ 11,00',
-        desc_it: 'zucchine, uova, parmigiano', desc_en: 'zucchini, eggs, parmesan cheese', desc_es: 'calabacín, huevos, queso parmesano', desc_de: 'Zucchini, Eier, Parmesankäse', desc_fr: 'courgettes, œufs, parmesan',
-        isVegetarian: true, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Spaghetti Veloci', price: '€ 9,50',
-        desc_it: 'aglio, olio d\'oliva, peperoncino', desc_en: 'garlic, olive oil, chili pepper', desc_es: 'ajo, aceite de oliva, chile', desc_de: 'Knoblauch, Olivenöl, Chili', desc_fr: 'ail, huile d\'olive, piment',
-        isVegetarian: true, isVegan: true, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Spaghetti siciliani', price: '€ 11,50',
-        desc_it: 'olio, peperoncino, aglio, acciuga, pangrattato tostato', desc_en: 'olive oil, chili pepper, garlic, anchovies, toasted breadcrumbs', desc_es: 'aceite de oliva, chile, ajo, anchoas, pan rallado tostado', desc_de: 'Olivenöl, Chili, Knoblauch, Sardellen, geröstete Semmelbrösel', desc_fr: 'huile d\'olive, piment, ail, anchois, chapelure grillée',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Primi Piatti / First Cousers', name: 'Pasta Pistacchio', price: '€ 13,00',
-        desc_it: 'salsiccia, pesto di pistacchio, panna, granella di pistacchio', desc_en: 'sausage, pistachio pesto, cream, chopped pistachio', desc_es: 'salchicha, pesto de pistacho, nata, pistachos picados', desc_de: 'Wurst, Pistazienpesto, Sahne, gehackte Pistazien', desc_fr: 'saucisse, pesto de pistache, crème, éclats de pistaches',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Lasagne al ragù', price: '€ 8,50', desc_it: 'lasagna, ragù di carne, besciamella, mozzarella, parmigiano', desc_en: 'lasagna pasta, meat ragout, béchamel, mozzarella cheese, parmesan cheese', desc_es: 'pasta lasaña, ragú de carne, bechamel, queso mozzarella, parmesano', desc_de: 'Lasagne-Nudeln, Fleischragout, Béchamelsauce, Mozzarella, Parmesan', desc_fr: 'pâtes à lasagnes, ragoût de viande, béchamel, mozzarella, parmesan', isVegetarian: false, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Gnocchi al pomodoro', price: '€ 8,00', desc_it: 'gnocchi, pomodoro', desc_en: 'potato gnocchi and tomato sauce', desc_es: 'ñoquis de patata con salsa de tomate', desc_de: 'Kartoffelgnocchi mit Tomatensoße', desc_fr: 'gnocchis de pommes de terre à la sauce tomate', isVegetarian: true, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Tortellini alfredo', price: '€ 10,00', desc_it: 'parmigiano, burro, prosciutto, panna, pepe', desc_en: 'parmesan cheese, butter, ham, cream, pepper', desc_es: 'queso parmesano, mantequilla, jamón, nata, pimienta', desc_de: 'Parmesankäse, Butter, Schinken, Sahne, Pfeffer', desc_fr: 'parmesan, beurre, jambon, crème, poivre', isVegetarian: false, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Pasta Carbonara', price: '€ 11,00', desc_it: 'guanciale, uova, parmigiano, pepe', desc_en: 'bacon, eggs, parmesan cheese, pepper', desc_es: 'tocino, huevos, queso parmesano, pimienta', desc_de: 'Speck, Eier, Parmesankäse, Pfeffer', desc_fr: 'lard, œufs, parmesan, poivre', isVegetarian: false, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Pasta Arrabbiata', price: '€ 9,00', desc_it: 'salsa piccante al pomodoro', desc_en: 'spicy tomato sauce', desc_es: 'salsa de tomate picante', desc_de: 'scharfe Tomatensoße', desc_fr: 'sauce tomate piquante', isVegetarian: true, isVegan: true, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Pasta Amatriciana', price: '€ 10,00', desc_it: 'salsa di pomodoro, guanciale, parmigiano', desc_en: 'tomato sauce, bacon, parmesan cheese', desc_es: 'salsa de tomate, tocino, queso parmesano', desc_de: 'Tomatensoße, Speck, Parmesankäse', desc_fr: 'sauce tomate, lard, parmesan', isVegetarian: false, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Pasta Salmone', price: '€ 12,00', desc_it: 'salmone affumicato, panna, salsa di pomodoro', desc_en: 'smoked salmon, cream, tomato sauce', desc_es: 'salmón ahumado, nata, salsa de tomate', desc_de: 'Räucherlachs, Sahne, Tomatensoße', desc_fr: 'saumon fumé, crème, sauce tomate', isVegetarian: false, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Pasta Norma', price: '€ 12,00', desc_it: 'salsa di pomodoro, melanzane fritte, ricotta salata', desc_en: 'tomato sauce, fried eggplants, dried ricotta cheese', desc_es: 'salsa de tomate, berenjenas fritas, queso ricotta salado', desc_de: 'Tomatensoße, frittierte Auberginen, gesalzener Ricotta', desc_fr: 'sauce tomate, aubergines frites, ricotta salée', isVegetarian: true, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Carbonara di zucchine', price: '€ 11,00', desc_it: 'zucchine, uova, parmigiano', desc_en: 'zucchini, eggs, parmesan cheese', desc_es: 'calabacín, huevos, queso parmesano', desc_de: 'Zucchini, Eier, Parmesankäse', desc_fr: 'courgettes, œufs, parmesan', isVegetarian: true, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Spaghetti Veloci', price: '€ 9,50', desc_it: 'aglio, olio d\'oliva, peperoncino', desc_en: 'garlic, olive oil, chili pepper', desc_es: 'ajo, aceite de oliva, chile', desc_de: 'Knoblauch, Olivenöl, Chili', desc_fr: 'ail, huile d\'olive, piment', isVegetarian: true, isVegan: true, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Spaghetti siciliani', price: '€ 11,50', desc_it: 'olio, peperoncino, aglio, acciuga, pangrattato tostato', desc_en: 'olive oil, chili pepper, garlic, anchovies, toasted breadcrumbs', desc_es: 'aceite de oliva, chile, ajo, anchoas, pan rallado tostado', desc_de: 'Olivenöl, Chili, Knoblauch, Sardellen, geröstete Semmelbrösel', desc_fr: 'huile d\'olive, piment, ail, anchois, chapelure grillée', isVegetarian: false, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Primi Piatti / First Courses', name: 'Pasta Pistacchio', price: '€ 13,00', desc_it: 'salsiccia, pesto di pistacchio, panna, granella di pistacchio', desc_en: 'sausage, pistachio pesto, cream, chopped pistachio', desc_es: 'salchicha, pesto de pistacho, nata, pistachos picados', desc_de: 'Wurst, Pistazienpesto, Sahne, gehackte Pistazien', desc_fr: 'saucisse, pesto de pistache, crème, éclats de pistaches', isVegetarian: false, isVegan: false, isGlutenFree: false },
 
-      // --- SECONDI PIATTI & CONTORNI ---
-      {
-        tab: 'restaurant', category: 'Secondi Piatti / Main Cousers', name: 'Cotoletta di pollo', price: '€ 9,50',
-        desc_it: 'cotoletta di pollo', desc_en: 'chicken cutlet', desc_es: 'chuleta de pollo empanada', desc_de: 'Hähnchenschnitzel', desc_fr: 'escalope de poulet panée',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Secondi Piatti / Main Cousers', name: 'Bistecca ai ferri', price: '€ 12,00',
-        desc_it: 'bistecca ai ferri', desc_en: 'grilled steak', desc_es: 'filete a la parrilla', desc_de: 'gegrilltes Steak', desc_fr: 'steak grillé',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Secondi Piatti / Main Cousers', name: 'Petto di pollo grigliato', price: '€ 9,00',
-        desc_it: 'petto di pollo grigliato', desc_en: 'grilled chicken breast', desc_es: 'pechuga de pollo a la parrilla', desc_de: 'gegrillte Hähnchenbrust', desc_fr: 'blanc de poulet grillé',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Secondi Piatti / Main Cousers', name: 'Arrosto misto carne, salsiccia, polpetta', price: '€ 15,00',
-        desc_it: 'arrosto misto carne, salsiccia, polpetta', desc_en: 'grilled steak, sausage, meatball', desc_es: 'parrillada mixta de carne, salchicha, albóndiga', desc_de: 'gemischter Grillteller, Wurst, Fleischbällchen', desc_fr: 'grillades mixtes, saucisse, boulette de viande',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Secondi Piatti / Main Cousers', name: 'Polpette in salsa di pomodoro con ricotta salata', price: '€ 10,00',
-        desc_it: 'polpette in salsa di pomodoro con ricotta salata', desc_en: 'tomato sauce meatballs with dried ricotta cheese', desc_es: 'albóndigas en salsa de tomate con queso ricotta salado', desc_de: 'Fleischbällchen in Tomatensoße mit gesalzenem Ricotta', desc_fr: 'boulettes de viande sauce tomate avec ricotta salée',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Contorni / Side dishes', name: 'Patate al forno', price: '€ 5,00',
-        desc_it: 'patate al forno', desc_en: 'baked potatoes', desc_es: 'patatas asadas', desc_de: 'Ofenkartoffeln', desc_fr: 'pommes de terre au four',
-        isVegetarian: true, isVegan: true, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Contorni / Side dishes', name: 'Patatine fritte', price: '€ 4,00',
-        desc_it: 'patatine fritte', desc_en: 'french fries', desc_es: 'patatas fritas', desc_de: 'Pommes Frites', desc_fr: 'frites',
-        isVegetarian: true, isVegan: true, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Contorni / Side dishes', name: 'Caponata', price: '€ 8,00',
-        desc_it: 'melanzane, peperoni, cipolla, olive nere, olio d\'oliva', desc_en: 'eggplants, peppers, onion, black olives, olive oil', desc_es: 'berenjenas, pimientos, cebolla, aceitunas negras, aceite de oliva', desc_de: 'Auberginen, Paprika, Zwiebeln, schwarze Oliven, Olivenöl', desc_fr: 'aubergines, poivrons, oignon, olives noires, huile d\'olive',
-        isVegetarian: true, isVegan: true, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Contorni / Side dishes', name: 'Verdure grigliate', price: '€ 8,50',
-        desc_it: 'melanzane, zucchine', desc_en: 'eggplants, zucchini', desc_es: 'berenjenas y calabacines asados', desc_de: 'gegrillte Auberginen und Zucchini', desc_fr: 'aubergines et courgettes grillées',
-        isVegetarian: true, isVegan: true, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'restaurant', category: 'Contorni / Side dishes', name: 'Insalata della nonna', price: '€ 7,00',
-        desc_it: 'pomodoro, cipolla rossa, ricotta salata', desc_en: 'tomato, red onion, dried ricotta cheese', desc_es: 'tomate, cebolla roja, queso ricotta salado', desc_de: 'Tomate, rote Zwiebel, gesalzener Ricotta', desc_fr: 'tomate, oignon rouge, ricotta salée',
-        isVegetarian: true, isVegan: false, isGlutenFree: true, available: true
-      }
-    ];
-
-    let updatedCount = 0;
-    let createdCount = 0;
-
-    for (let item of menuItems) {
-      const existing = await MenuItem.findOne({ name: item.name, category: item.category });
-      if (existing) {
-        Object.assign(existing, item);
-        await existing.save();
-        updatedCount++;
-      } else {
-        item.id = crypto.randomBytes(4).toString('hex');
-        await new MenuItem(item).save();
-        createdCount++;
-      }
-    }
-
-    res.send(`<h1>✅ Batch 3 Success!</h1><p>Updated ${updatedCount} existing items.</p><p>Created ${createdCount} new items.</p>`);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(`<h1>❌ Error:</h1><p>${err.message}</p>`);
-  }
-});
+      // --- SECONDI PIATTI / MAIN COURSES ---
+      { tab: 'restaurant', category: 'Secondi Piatti / Main Courses', name: 'Cotoletta di pollo', price: '€ 9,50', desc_it: 'cotoletta di pollo', desc_en: 'chicken cutlet', desc_es: 'chuleta de pollo empanada', desc_de: 'Hähnchenschnitzel', desc_fr: 'escalope de poulet panée', isVegetarian: false, isVegan: false, isGlutenFree: false },
+      { tab: 'restaurant', category: 'Secondi Piatti / Main Courses', name: 'Bistecca ai ferri', price: '€ 12,00', desc_it: 'bistecca ai ferri', desc_en: 'grilled steak', desc_es: 'filete a la parrilla', desc_de: 'gegrilltes Steak', desc_fr: 'steak grillé', isVegetarian: false, isVegan: false, isGlutenFree: true },
+      { tab: 'restaurant', category: 'Secondi Piatti / Main Courses', name: 'Petto di pollo grigliato', price: '€ 9,00', desc_it: 'petto di pollo grigliato', desc_en: 'grilled chicken breast', desc_es: 'pechuga de pollo a la parrilla', desc_de: 'gegrillte Hähnchenbrust', desc_fr: 'blanc de poulet grillé', isVegetarian: false, isVegan: false, isGlutenFree: true },
+      { tab: 'restaurant', category: 'Secondi Piatti / Main Courses', name: 'Arrosto misto carne, salsiccia, polpetta', price: '€ 15,00', desc_it: 'arrosto misto carne, salsiccia, polpetta', desc_en: 'grilled steak, sausage, meatball',
 
 // --- PAGE ROUTING ---
 app.get('/', (req, res) => res.redirect('/admin.html'));
