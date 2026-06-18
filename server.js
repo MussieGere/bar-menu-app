@@ -643,11 +643,6 @@ app.get('/api/admin-qr-desserts', requireApiAdmin, async (req, res) => {
   res.json({ scanUrl, qrDataUrl });
 });
 
-// --- PAGE ROUTING ---
-app.get('/', (req, res) => res.redirect('/admin.html'));
-app.get('/admin', (req, res) => res.redirect('/admin.html'));
-app.use((req, res) => res.status(404).send('Page not found. Are you looking for /admin.html?'));
-
 // --- TEMPORARY BULK UPDATE SCRIPT FOR PIZZAS ---
 app.get('/api/run-bulk-pizzas', async (req, res) => {
   try {
@@ -763,5 +758,10 @@ app.get('/api/run-bulk-pizzas', async (req, res) => {
     res.status(500).send(`<h1>❌ Error:</h1><p>${err.message}</p>`);
   }
 });
+
+// --- PAGE ROUTING ---
+app.get('/', (req, res) => res.redirect('/admin.html'));
+app.get('/admin', (req, res) => res.redirect('/admin.html'));
+app.use((req, res) => res.status(404).send('Page not found. Are you looking for /admin.html?'));
 
 app.listen(PORT, () => console.log(`\n✦ Ai Paladini Server running at http://localhost:${PORT}`));
