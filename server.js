@@ -37,14 +37,14 @@ const menuItemSchema = new mongoose.Schema({
   desc_es: String, // <-- ADD THIS
   desc_de: String, // <-- ADD THIS
   desc_fr: String,
-  available: Boolean,
+  available: { type: Boolean, default: true },
   image: String,
   // --- NEW DIETARY FIELDS ---
   isVegetarian: { type: Boolean, default: false },
   isVegan: { type: Boolean, default: false },
   isGlutenFree: { type: Boolean, default: false },
-  clicks: { type: Number, default: 0 }
-});
+  clicks: { type: Number, default: 0 },
+}, { strict: false });
 const MenuItem = mongoose.model('MenuItem', menuItemSchema);
 
 // --- SEED DATABASE ON STARTUP ---
