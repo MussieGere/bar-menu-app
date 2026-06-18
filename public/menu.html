@@ -278,7 +278,9 @@
     window.history.replaceState({}, document.title, window.location.pathname);
     throw new Error("Reloaded");
   }
-// --- 1. FULL I18N DICTIONARY ---
+  
+// --- 1. GLOBAL CACHE & I18N DICTIONARY ---
+let globalMenuData = [];
 const i18n = {
   en: { search: "Search menu...", bar: "Bar & Cafe", food: "Pizza & Sandwiches", restaurant: "Restaurant", cocktails: "Cocktails", wine: "Wine List", desserts: "Desserts", sessionExp: "Session Expired", sessionExpDesc: "Your access has timed out. Please scan the QR code on your table again.", subtitle: "Taormina, Sicily" },
   it: { search: "Cerca nel menù...", bar: "Bar & Caffetteria", food: "Pizza e Panini", restaurant: "Ristorante", cocktails: "Cocktails", wine: "Carta dei Vini", desserts: "Dolci", sessionExp: "Sessione Scaduta", sessionExpDesc: "Il tuo accesso è scaduto. Scansiona nuovamente il QR code al tuo tavolo.", subtitle: "Taormina, Sicilia" },
@@ -286,23 +288,20 @@ const i18n = {
   de: { search: "Menü durchsuchen...", bar: "Bar & Café", food: "Pizza & Sandwiches", restaurant: "Restaurant", cocktails: "Cocktails", wine: "Weinkarte", desserts: "Nachspeisen", sessionExp: "Sitzung Abgelaufen", sessionExpDesc: "Ihr Zugriff ist abgelaufen. Bitte scannen Sie den QR-Code auf Ihrem Tisch erneut.", subtitle: "Taormina, Sizilien" },
   fr: { search: "Rechercher...", bar: "Bar & Café", food: "Pizza & Sandwichs", restaurant: "Restaurant", cocktails: "Cocktails", wine: "Carte des Vins", desserts: "Desserts", sessionExp: "Session Expirée", sessionExpDesc: "Votre accès a expiré. Veuillez scanner à nouveau le code QR sur votre table.", subtitle: "Taormina, Sicile" }
 };
-
+  
 // --- 2. BULLETPROOF LANGUAGE SWITCHER ---
 function setLanguage(lang) {
   const t = i18n[lang] || i18n['en'];
 
-  // 1. Translate the top UI tabs dynamically
+  // Translate the top UI tabs
   document.querySelectorAll('.tab-btn').forEach(btn => {
     const text = btn.innerText.toUpperCase();
     if (text.includes('BAR') || text.includes('CAFE') || text.includes('CAFFÈ')) btn.innerText = t.bar;
     if (text.includes('PIZZA') || text.includes('PANINI') || text.includes('SANDWICH')) btn.innerText = t.food;
     if (text.includes('REST')) btn.innerText = t.restaurant;
     if (text.includes('COCKTAIL') || text.includes('CÓCTEL')) btn.innerText = t.cocktails;
-    if (text.includes('WINE') || text.includes('VINI')) btn.innerText = t.wine;
-    if (text.includes('DESSERT') || text.includes('DOLCI') || text.includes('POSTRES') || text.includes('NACHSPEISEN')) btn.innerText = t.desserts;
   });
 
-  // 2. Update Search & Subtitle & Gates
   const searchBox = document.getElementById('menu-search');
   if (searchBox) searchBox.placeholder = t.search;
 
@@ -322,18 +321,8 @@ function setLanguage(lang) {
     expGate.querySelector('p').innerText = t.sessionExpDesc;
   }
 
-  // 3. Remember the active tab before we redraw the menu
-  const activeTabBtn = document.querySelector('.tab-btn.active');
-  if (activeTabBtn) {
-    const activeText = activeTabBtn.innerText.toUpperCase();
-    if (activeText.includes('BAR') || activeText.includes('CAF')) window.currentActiveTab = 'bar';
-    if (activeText.includes('PIZZA') || activeText.includes('PANINI')) window.currentActiveTab = 'food';
-    if (activeText.includes('REST')) window.currentActiveTab = 'restaurant';
-    if (activeText.includes('COCKTAIL') || activeText.includes('CÓCTEL')) window.currentActiveTab = 'cocktails';
-  }
-
-  // 4. Force the menu to redraw with the new descriptions
-  if (typeof fetchMenu === 'function') fetchMenu();
+  // INSTANTLY redraw the menu content from cache (NO NETWORK DELAY)
+  renderMenu();
 }
 
   function getToken() { return new URLSearchParams(window.location.search).get('token'); }
@@ -371,11 +360,16 @@ function setLanguage(lang) {
     fetchMenu();
     startTimer();
   }
-// --- 3. DYNAMIC MENU FETCHER ---
+  
+// --- 3. FETCH ONCE FROM SERVER ---
 async function fetchMenu() {
   const res = await fetch('/api/menu');
-  const menuData = await res.json();
+  globalMenuData = await res.json();
+  renderMenu();
+}
 
+// --- 4. INSTANT REDRAW FUNCTION ---
+function renderMenu() {
   const urlParams = new URLSearchParams(window.location.search);
   const menuType = urlParams.get('menu');
 
@@ -384,43 +378,42 @@ async function fetchMenu() {
   container.innerHTML = '';
 
   let tabs = ['bar', 'food', 'restaurant', 'cocktails'];
-  // MAGIC FIX: Remember the tab we were just looking at!
-  let firstTab = window.currentActiveTab || 'bar';
+  
+  // CRITICAL FIX: Figure out EXACTLY which tab button is highlighted right now
+  let activeTabName = 'bar';
+  const activeBtn = document.querySelector('.tab-btn.active');
+  if (activeBtn) {
+    const text = activeBtn.innerText.toUpperCase();
+    if (text.includes('PIZZA') || text.includes('PANINI') || text.includes('SANDWICH')) activeTabName = 'food';
+    else if (text.includes('REST')) activeTabName = 'restaurant';
+    else if (text.includes('COCKTAIL') || text.includes('CÓCTEL')) activeTabName = 'cocktails';
+  }
 
   if (menuType === 'wine') {
     document.body.classList.add('wine-theme');
     tabs = ['wine'];
-    firstTab = 'wine';
+    activeTabName = 'wine';
     if(document.getElementById('wine-tab')) document.getElementById('wine-tab').style.display = 'block';
     if(document.getElementById('desserts-tab')) document.getElementById('desserts-tab').style.display = 'none';
-    document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-      if (idx < 4) btn.style.display = 'none';
-    });
+    document.querySelectorAll('.tab-btn').forEach((btn, idx) => { if (idx < 4) btn.style.display = 'none'; });
     container.classList.add('wine-section');
-    
-    // Safety fallback for wine title in case translation isn't ready
-    if(document.getElementById('subtitle') && !document.getElementById('subtitle').innerHTML.includes('<br>')) {
-        document.getElementById('subtitle').innerHTML = 'CARTA DEI VINI<br><span style="font-size: 10px; letter-spacing: 5px; color: var(--gold); display: block; margin-top: 5px;">Taormina, Sicily</span>';
-    }
   } else if (menuType === 'desserts') {
     tabs = ['desserts'];
-    firstTab = 'desserts';
+    activeTabName = 'desserts';
     if(document.getElementById('desserts-tab')) document.getElementById('desserts-tab').style.display = 'block';
     if(document.getElementById('wine-tab')) document.getElementById('wine-tab').style.display = 'none';
-    document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-      if (idx < 4) btn.style.display = 'none';
-    });
+    document.querySelectorAll('.tab-btn').forEach((btn, idx) => { if (idx < 4) btn.style.display = 'none'; });
   }
 
-  // Detect language once
   const currentLang = document.getElementById('lang-switcher') ? document.getElementById('lang-switcher').value : 'en';
 
   tabs.forEach(tab => {
     const section = document.createElement('section');
-    section.className = `menu-section ${tab === firstTab ? 'active' : ''}`;
+    // Force this section to be active if it matches the highlighted button
+    section.className = `menu-section ${tab === activeTabName ? 'active' : ''}`;
     section.id = `section-${tab}`;
 
-    const tabItems = menuData.filter(i => i.tab === tab && i.available);
+    const tabItems = globalMenuData.filter(i => i.tab === tab && i.available);
     let html = '';
 
     if (tab === 'wine') {
