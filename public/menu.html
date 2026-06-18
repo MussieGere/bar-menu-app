@@ -278,117 +278,63 @@
     window.history.replaceState({}, document.title, window.location.pathname);
     throw new Error("Reloaded");
   }
+// --- 1. FULL I18N DICTIONARY ---
+const i18n = {
+  en: { search: "Search menu...", bar: "Bar & Cafe", food: "Pizza & Sandwiches", restaurant: "Restaurant", cocktails: "Cocktails", wine: "Wine List", desserts: "Desserts", sessionExp: "Session Expired", sessionExpDesc: "Your access has timed out. Please scan the QR code on your table again.", subtitle: "Taormina, Sicily" },
+  it: { search: "Cerca nel menù...", bar: "Bar & Caffetteria", food: "Pizza e Panini", restaurant: "Ristorante", cocktails: "Cocktails", wine: "Carta dei Vini", desserts: "Dolci", sessionExp: "Sessione Scaduta", sessionExpDesc: "Il tuo accesso è scaduto. Scansiona nuovamente il QR code al tuo tavolo.", subtitle: "Taormina, Sicilia" },
+  es: { search: "Buscar en el menú...", bar: "Bar y Café", food: "Pizza y Bocadillos", restaurant: "Restaurante", cocktails: "Cócteles", wine: "Carta de Vinos", desserts: "Postres", sessionExp: "Sesión Caducada", sessionExpDesc: "Su acceso ha expirado. Vuelva a escanear el código QR en su mesa.", subtitle: "Taormina, Sicilia" },
+  de: { search: "Menü durchsuchen...", bar: "Bar & Café", food: "Pizza & Sandwiches", restaurant: "Restaurant", cocktails: "Cocktails", wine: "Weinkarte", desserts: "Nachspeisen", sessionExp: "Sitzung Abgelaufen", sessionExpDesc: "Ihr Zugriff ist abgelaufen. Bitte scannen Sie den QR-Code auf Ihrem Tisch erneut.", subtitle: "Taormina, Sizilien" },
+  fr: { search: "Rechercher...", bar: "Bar & Café", food: "Pizza & Sandwichs", restaurant: "Restaurant", cocktails: "Cocktails", wine: "Carte des Vins", desserts: "Desserts", sessionExp: "Session Expirée", sessionExpDesc: "Votre accès a expiré. Veuillez scanner à nouveau le code QR sur votre table.", subtitle: "Taormina, Sicile" }
+};
 
-  // --- i18n TRANSLATION DICTIONARY ---
-  const i18n = {
-    en: {
-      searchPlaceholder: "Search menu...",
-      barTab: "Bar & Cafe",
-      foodTab: "Pizza & Sandwiches",
-      restTab: "Restaurant",
-      cocktailTab: "Cocktails",
-      wineTab: "Wine List",
-      dessertsTab: "Desserts",
-      sessionExp: "Session Expired",
-      sessionExpDesc: "Your access has timed out. Please scan the QR code on your table again.",
-      subtitle: "Taormina, Sicily"
-    },
-    it: {
-      searchPlaceholder: "Cerca nel menù...",
-      barTab: "Bar & Caffetteria",
-      foodTab: "Pizza e Panini",
-      restTab: "Ristorante",
-      cocktailTab: "Cocktails",
-      wineTab: "Carta dei Vini",
-      dessertsTab: "Dolci",
-      sessionExp: "Sessione Scaduta",
-      sessionExpDesc: "Il tuo accesso è scaduto. Scansiona nuovamente il QR code al tuo tavolo.",
-      subtitle: "Taormina, Sicilia"
-    },
-    es: {
-      searchPlaceholder: "Buscar en el menú...",
-      barTab: "Bar y Café",
-      foodTab: "Pizza y Bocadillos",
-      restTab: "Restaurante",
-      cocktailTab: "Cócteles",
-      wineTab: "Carta de Vinos",
-      dessertsTab: "Postres",
-      sessionExp: "Sesión Caducada",
-      sessionExpDesc: "Su acceso ha expirado. Vuelva a escanear el código QR en su mesa.",
-      subtitle: "Taormina, Sicilia"
-    },
-    de: {
-      searchPlaceholder: "Menü durchsuchen...",
-      barTab: "Bar & Café",
-      foodTab: "Pizza & Sandwiches",
-      restTab: "Restaurant",
-      cocktailTab: "Cocktails",
-      wineTab: "Weinkarte",
-      dessertsTab: "Nachspeisen",
-      sessionExp: "Sitzung Abgelaufen",
-      sessionExpDesc: "Ihr Zugriff ist abgelaufen. Bitte scannen Sie den QR-Code auf Ihrem Tisch erneut.",
-      subtitle: "Taormina, Sizilien"
-    },
-    fr: {
-      searchPlaceholder: "Rechercher...",
-      barTab: "Bar & Café",
-      foodTab: "Pizza & Sandwichs",
-      restTab: "Restaurant",
-      cocktailTab: "Cocktails",
-      wineTab: "Carte des Vins",
-      dessertsTab: "Desserts",
-      sessionExp: "Session Expirée",
-      sessionExpDesc: "Votre accès a expiré. Veuillez scanner à nouveau le code QR sur votre table.",
-      subtitle: "Taormina, Sicile"
+// --- 2. BULLETPROOF LANGUAGE SWITCHER ---
+function setLanguage(lang) {
+  const t = i18n[lang] || i18n['en'];
+
+  // 1. Translate the top UI tabs dynamically
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const text = btn.innerText.toUpperCase();
+    if (text.includes('BAR') || text.includes('CAFE') || text.includes('CAFFÈ')) btn.innerText = t.bar;
+    if (text.includes('PIZZA') || text.includes('PANINI') || text.includes('SANDWICH')) btn.innerText = t.food;
+    if (text.includes('REST')) btn.innerText = t.restaurant;
+    if (text.includes('COCKTAIL') || text.includes('CÓCTEL')) btn.innerText = t.cocktails;
+    if (text.includes('WINE') || text.includes('VINI')) btn.innerText = t.wine;
+    if (text.includes('DESSERT') || text.includes('DOLCI') || text.includes('POSTRES') || text.includes('NACHSPEISEN')) btn.innerText = t.desserts;
+  });
+
+  // 2. Update Search & Subtitle & Gates
+  const searchBox = document.getElementById('menu-search');
+  if (searchBox) searchBox.placeholder = t.search;
+
+  const subtitleElement = document.getElementById('subtitle');
+  if(subtitleElement) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('menu') === 'wine') {
+      subtitleElement.innerHTML = `${t.wine.toUpperCase()}<br><span style="font-size: 10px; letter-spacing: 5px; color: var(--gold); display: block; margin-top: 5px;">${t.subtitle}</span>`;
+    } else {
+      subtitleElement.innerText = t.subtitle;
     }
-  };
+  }
 
-  let currentLang = 'en'; // Default language
-  
-  function setLanguage(lang) {
-    currentLang = lang;
-    const t = i18n[lang];
+  const expGate = document.getElementById('gate-expired');
+  if(expGate) {
+    expGate.querySelector('h2').innerHTML = `${t.sessionExp.split(' ')[0]} <em style="color:var(--gold)">${t.sessionExp.split(' ').slice(1).join(' ')}</em>`;
+    expGate.querySelector('p').innerText = t.sessionExpDesc;
+  }
 
-    // 1. Update Tabs
-    const tabs = document.querySelectorAll('.tab-btn');
-    if(tabs.length >= 6) {
-      tabs[0].innerText = t.barTab;
-      tabs[1].innerText = t.foodTab;
-      tabs[2].innerText = t.restTab;
-      tabs[3].innerText = t.cocktailTab;
-      tabs[4].innerText = t.wineTab;
-      tabs[5].innerText = t.dessertsTab;
-    }
-
-    // 2. Update Gates
-    const expGate = document.getElementById('gate-expired');
-    if(expGate) {
-      expGate.querySelector('h2').innerHTML = `${t.sessionExp.split(' ')[0]} <em style="color:var(--gold)">${t.sessionExp.split(' ').slice(1).join(' ')}</em>`;
-      expGate.querySelector('p').innerText = t.sessionExpDesc;
-    }
-
-    // 3. Update Subtitle
-    const subtitleElement = document.getElementById('subtitle');
-    if(subtitleElement) {
-      if(getMenuType() === 'wine') {
-        subtitleElement.innerHTML = `${t.wineTab.toUpperCase()}<br><span style="font-size: 10px; letter-spacing: 5px; color: var(--gold); display: block; margin-top: 5px;">${t.subtitle}</span>`;
-      } else {
-        subtitleElement.innerText = t.subtitle;
-      }
-    }
-
-    // Update Search Placeholder
-    const searchInput = document.getElementById('menu-search');
-    if(searchInput) searchInput.placeholder = t.searchPlaceholder;
-    
-    // FIX: Redraw the currently active tab instead of reloading the whole menu!
+  // 3. Remember the active tab before we redraw the menu
   const activeTabBtn = document.querySelector('.tab-btn.active');
   if (activeTabBtn) {
-    activeTabBtn.click(); 
-  } else {
-    fetchMenu(); // Fallback just in case no tab is active
+    const activeText = activeTabBtn.innerText.toUpperCase();
+    if (activeText.includes('BAR') || activeText.includes('CAF')) window.currentActiveTab = 'bar';
+    if (activeText.includes('PIZZA') || activeText.includes('PANINI')) window.currentActiveTab = 'food';
+    if (activeText.includes('REST')) window.currentActiveTab = 'restaurant';
+    if (activeText.includes('COCKTAIL') || activeText.includes('CÓCTEL')) window.currentActiveTab = 'cocktails';
   }
-  }
+
+  // 4. Force the menu to redraw with the new descriptions
+  if (typeof fetchMenu === 'function') fetchMenu();
+}
 
   function getToken() { return new URLSearchParams(window.location.search).get('token'); }
   function getMenuType() { return new URLSearchParams(window.location.search).get('menu') || 'main'; }
@@ -425,153 +371,130 @@
     fetchMenu();
     startTimer();
   }
-
+// --- 3. DYNAMIC MENU FETCHER ---
 async function fetchMenu() {
-    const res = await fetch('/api/menu');
-    const menuData = await res.json();
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const menuType = urlParams.get('menu');
-    
-    const container = document.getElementById('dynamic-menu-container');
-    container.innerHTML = '';
-      
-      // ... KEEP ALL YOUR EXISTING CODE FROM HERE DOWN ...
-    let tabs = ['bar', 'food', 'restaurant', 'cocktails'];
-    let firstTab = 'bar';
-    
-    if (menuType === 'wine') {
-      // NEW: Apply the dark theme to the entire page body
-      document.body.classList.add('wine-theme'); 
-      
-      tabs = ['wine'];
-      firstTab = 'wine';
-      document.getElementById('wine-tab').style.display = 'block';
-      document.getElementById('desserts-tab').style.display = 'none';
-      document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-        if (idx < 4) btn.style.display = 'none';
-      });
-      container.classList.add('wine-section');
+  const res = await fetch('/api/menu');
+  const menuData = await res.json();
 
-      // Update Hero Title for Wine Menu
-      document.getElementById('subtitle').innerHTML = 'CARTA DEI VINI<br><span style="font-size: 10px; letter-spacing: 5px; color: var(--gold); display: block; margin-top: 5px;">Taormina, Sicily</span>';
-    } else if (menuType === 'desserts') {
-      tabs = ['desserts'];
-      firstTab = 'desserts';
-      document.getElementById('desserts-tab').style.display = 'block';
-      document.getElementById('wine-tab').style.display = 'none';
-      document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-        if (idx < 4) btn.style.display = 'none';
-      });
+  const urlParams = new URLSearchParams(window.location.search);
+  const menuType = urlParams.get('menu');
+
+  const container = document.getElementById('dynamic-menu-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  let tabs = ['bar', 'food', 'restaurant', 'cocktails'];
+  // MAGIC FIX: Remember the tab we were just looking at!
+  let firstTab = window.currentActiveTab || 'bar';
+
+  if (menuType === 'wine') {
+    document.body.classList.add('wine-theme');
+    tabs = ['wine'];
+    firstTab = 'wine';
+    if(document.getElementById('wine-tab')) document.getElementById('wine-tab').style.display = 'block';
+    if(document.getElementById('desserts-tab')) document.getElementById('desserts-tab').style.display = 'none';
+    document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+      if (idx < 4) btn.style.display = 'none';
+    });
+    container.classList.add('wine-section');
+    
+    // Safety fallback for wine title in case translation isn't ready
+    if(document.getElementById('subtitle') && !document.getElementById('subtitle').innerHTML.includes('<br>')) {
+        document.getElementById('subtitle').innerHTML = 'CARTA DEI VINI<br><span style="font-size: 10px; letter-spacing: 5px; color: var(--gold); display: block; margin-top: 5px;">Taormina, Sicily</span>';
     }
-    
-    tabs.forEach(tab => {
-      const section = document.createElement('section');
-      section.className = `menu-section ${tab === firstTab ? 'active' : ''}`;
-      section.id = `section-${tab}`;
-      
-      const tabItems = menuData.filter(i => i.tab === tab && i.available);
-      let html = '';
-      
-      if (tab === 'wine') {
-        // --- CUSTOM WINE MENU RENDERING ---
-        const mainCats = [...new Set(tabItems.map(i => i.category.split(' - ')[0]))];
-        
-        mainCats.forEach(mainCat => {
-          html += `<div class="wine-main-title">${mainCat}</div>`;
-          const subCats = [...new Set(tabItems.filter(i => i.category.startsWith(mainCat)).map(i => i.category.split(' - ')[1] || ''))];
-          
-          subCats.forEach(subCat => {
-            if (subCat) html += `<div class="wine-sub-title">${subCat}</div>`;
-            
-            const targetCategory = subCat ? `${mainCat} - ${subCat}` : mainCat;
-            tabItems.filter(i => i.category === targetCategory).forEach(item => {
-              
-               // --- DYNAMIC 5-LANGUAGE SELECTOR (Default: English) ---
-            const currentLang = document.getElementById('lang-switcher') ? document.getElementById('lang-switcher').value : 'en';
+  } else if (menuType === 'desserts') {
+    tabs = ['desserts'];
+    firstTab = 'desserts';
+    if(document.getElementById('desserts-tab')) document.getElementById('desserts-tab').style.display = 'block';
+    if(document.getElementById('wine-tab')) document.getElementById('wine-tab').style.display = 'none';
+    document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+      if (idx < 4) btn.style.display = 'none';
+    });
+  }
 
-            // Start with English. If missing, fallback to Italian, then legacy desc.
-            let selectedDesc = item.desc_en || item.desc_it || item.desc || ''; 
-            
-            // Override with the requested language if it exists in the database
+  // Detect language once
+  const currentLang = document.getElementById('lang-switcher') ? document.getElementById('lang-switcher').value : 'en';
+
+  tabs.forEach(tab => {
+    const section = document.createElement('section');
+    section.className = `menu-section ${tab === firstTab ? 'active' : ''}`;
+    section.id = `section-${tab}`;
+
+    const tabItems = menuData.filter(i => i.tab === tab && i.available);
+    let html = '';
+
+    if (tab === 'wine') {
+      const mainCats = [...new Set(tabItems.map(i => i.category.split(' - ')[0]))];
+      mainCats.forEach(mainCat => {
+        html += `<div class="wine-main-title">${mainCat}</div>`;
+        const subCats = [...new Set(tabItems.filter(i => i.category.startsWith(mainCat)).map(i => i.category.split(' - ')[1] || ''))];
+        subCats.forEach(subCat => {
+          if (subCat) html += `<div class="wine-sub-title">${subCat}</div>`;
+          const targetCategory = subCat ? `${mainCat} - ${subCat}` : mainCat;
+
+          tabItems.filter(i => i.category === targetCategory).forEach(item => {
+            let selectedDesc = item.desc_en || item.desc_it || item.desc || '';
             if (currentLang === 'it' && item.desc_it) selectedDesc = item.desc_it;
             if (currentLang === 'es' && item.desc_es) selectedDesc = item.desc_es;
             if (currentLang === 'de' && item.desc_de) selectedDesc = item.desc_de;
             if (currentLang === 'fr' && item.desc_fr) selectedDesc = item.desc_fr;
 
-              // --- NEW DIETARY & BIO BADGE LOGIC (WINE) ---
-              let badges = '';
-              if (item.isVegetarian) badges += '<span title="Vegetarian" style="font-size: 16px; margin-left: 4px;">🥕</span>';
-              if (item.isVegan) badges += '<span title="Vegan" style="font-size: 16px; margin-left: 4px;">🌱</span>';
-              if (item.isGlutenFree) badges += '<span title="Gluten-Free" style="font-size: 16px; margin-left: 4px;">🌾</span>';
-
-              // Legacy BIO check
-              const isBio = item.name.includes('BIO') || 
-                            (item.desc && item.desc.includes('BIO')) || 
-                            (item.desc_it && item.desc_it.includes('BIO')) || 
-                            (item.desc_en && item.desc_en.includes('BIO'));
-                            
-              if (isBio) badges += '<span class="bio-badge" style="margin-left: 6px;">🍃 BIO</span>';
-              
-              let cleanName = item.name.replace(/\bBIO\b/g, '').trim();
-              let cleanDesc = selectedDesc.replace(/\bBIO\b/g, '').trim();
-
-              html += `
-                <div class="menu-item" onclick="trackClick('${item.id}')">
-                  <div class="item-name">${cleanName} ${badges}</div>
-                  <div class="item-price">${item.price}</div>
-                  ${cleanDesc ? `<div class="item-desc">${cleanDesc}</div>` : ''}
-                </div>
-              `;
-            });
-          });
-        });
-      } else {
-        // --- STANDARD MENU RENDERING ---
-        const categories = [...new Set(tabItems.map(i => i.category))];
-        
-        categories.forEach(cat => {
-          html += `<div class="category-title">${cat}</div>`;
-          tabItems.filter(i => i.category === cat).forEach(item => {
-            
-           // --- DYNAMIC 5-LANGUAGE SELECTOR (Default: English) ---
-            const currentLang = document.getElementById('lang-switcher') ? document.getElementById('lang-switcher').value : 'en';
-
-            // Start with English. If missing, fallback to Italian, then legacy desc.
-            let selectedDesc = item.desc_en || item.desc_it || item.desc || ''; 
-            
-            // Override with the requested language if it exists in the database
-            if (currentLang === 'it' && item.desc_it) selectedDesc = item.desc_it;
-            if (currentLang === 'es' && item.desc_es) selectedDesc = item.desc_es;
-            if (currentLang === 'de' && item.desc_de) selectedDesc = item.desc_de;
-            if (currentLang === 'fr' && item.desc_fr) selectedDesc = item.desc_fr;
-            // --- NEW DIETARY & BIO BADGE LOGIC (STANDARD) ---
             let badges = '';
             if (item.isVegetarian) badges += '<span title="Vegetarian" style="font-size: 16px; margin-left: 4px;">🥕</span>';
             if (item.isVegan) badges += '<span title="Vegan" style="font-size: 16px; margin-left: 4px;">🌱</span>';
             if (item.isGlutenFree) badges += '<span title="Gluten-Free" style="font-size: 16px; margin-left: 4px;">🌾</span>';
 
-            // Clean "BIO" out of standard items just in case
-            const isBio = item.name.includes('BIO');
+            const isBio = (item.name && item.name.includes('BIO')) || (item.desc && item.desc.includes('BIO')) || (item.desc_it && item.desc_it.includes('BIO')) || (item.desc_en && item.desc_en.includes('BIO'));
             if (isBio) badges += '<span class="bio-badge" style="margin-left: 6px;">🍃 BIO</span>';
-            let cleanName = item.name.replace(/\bBIO\b/g, '').trim();
+
+            let cleanName = item.name ? item.name.replace(/\bBIO\b/g, '').trim() : '';
+            let cleanDesc = selectedDesc ? selectedDesc.replace(/\bBIO\b/g, '').trim() : '';
 
             html += `
               <div class="menu-item" onclick="trackClick('${item.id}')">
-                ${item.image ? `<img src="${item.image}" alt="${cleanName}" class="item-image">` : ''}
                 <div class="item-name">${cleanName} ${badges}</div>
                 <div class="item-price">${item.price}</div>
-                ${selectedDesc ? `<div class="item-desc">${selectedDesc}</div>` : ''}
+                ${cleanDesc ? `<div class="item-desc">${cleanDesc}</div>` : ''}
               </div>
             `;
           });
         });
-      }
-      
-      section.innerHTML = html;
-      container.appendChild(section);
-    });
-  }
+      });
+    } else {
+      const categories = [...new Set(tabItems.map(i => i.category))];
+      categories.forEach(cat => {
+        html += `<div class="category-title">${cat}</div>`;
+        tabItems.filter(i => i.category === cat).forEach(item => {
+          let selectedDesc = item.desc_en || item.desc_it || item.desc || '';
+          if (currentLang === 'it' && item.desc_it) selectedDesc = item.desc_it;
+          if (currentLang === 'es' && item.desc_es) selectedDesc = item.desc_es;
+          if (currentLang === 'de' && item.desc_de) selectedDesc = item.desc_de;
+          if (currentLang === 'fr' && item.desc_fr) selectedDesc = item.desc_fr;
+
+          let badges = '';
+          if (item.isVegetarian) badges += '<span title="Vegetarian" style="font-size: 16px; margin-left: 4px;">🥕</span>';
+          if (item.isVegan) badges += '<span title="Vegan" style="font-size: 16px; margin-left: 4px;">🌱</span>';
+          if (item.isGlutenFree) badges += '<span title="Gluten-Free" style="font-size: 16px; margin-left: 4px;">🌾</span>';
+
+          const isBio = item.name && item.name.includes('BIO');
+          if (isBio) badges += '<span class="bio-badge" style="margin-left: 6px;">🍃 BIO</span>';
+          let cleanName = item.name ? item.name.replace(/\bBIO\b/g, '').trim() : '';
+
+          html += `
+            <div class="menu-item" onclick="trackClick('${item.id}')">
+              ${item.image ? `<img src="${item.image}" alt="${cleanName}" class="item-image">` : ''}
+              <div class="item-name">${cleanName} ${badges}</div>
+              <div class="item-price">${item.price}</div>
+              ${selectedDesc ? `<div class="item-desc">${selectedDesc}</div>` : ''}
+            </div>
+          `;
+        });
+      });
+    }
+    section.innerHTML = html;
+    container.appendChild(section);
+  });
+}
 
   // --- REAL-TIME SEARCH FILTER ---
   function filterMenu() {
