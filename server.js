@@ -646,196 +646,31 @@ app.get('/api/admin-qr-desserts', requireApiAdmin, async (req, res) => {
   res.json({ scanUrl, qrDataUrl });
 });
 
-// --- TEMPORARY BULK UPDATE SCRIPT BATCH 2: BURGERS, SANDWICHES, SALADS ---
-app.get('/api/run-bulk-batch2', async (req, res) => {
+// --- TEMPORARY FIXER SCRIPT: SEPARATE THE LANGUAGES ---
+app.get('/api/fix-languages', async (req, res) => {
   try {
-    const crypto = require('crypto');
-    
-    const menuItems = [
-      // --- BURGERS ---
-      {
-        tab: 'food', category: 'Burger / Burgers', name: 'Hamburger', price: '€ 8,50',
-        desc_it: 'hamburger 200gr, pomodoro, insalata, olio d\'oliva, origano',
-        desc_en: '<strong>EN:</strong> hamburger 200gr, tomato slice, salad, olive oil, oregano<br><strong>ES:</strong> hamburguesa 200gr, tomate, ensalada, aceite de oliva, orégano<br><strong>DE:</strong> Hamburger 200g, Tomate, Salat, Olivenöl, Oregano<br><strong>FR:</strong> hamburger 200g, tomate, salade, huile d\'olive, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Burger / Burgers', name: 'Cheeseburger', price: '€ 9,00',
-        desc_it: 'hamburger 200gr, formaggio cheddar, pomodoro, insalata, olio d\'oliva, origano',
-        desc_en: '<strong>EN:</strong> hamburger 200gr, cheddar cheese, tomato slice, salad, olive oil, oregano<br><strong>ES:</strong> hamburguesa 200gr, queso cheddar, tomate, ensalada, aceite de oliva, orégano<br><strong>DE:</strong> Hamburger 200g, Cheddarkäse, Tomate, Salat, Olivenöl, Oregano<br><strong>FR:</strong> hamburger 200g, fromage cheddar, tomate, salade, huile d\'olive, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Burger / Burgers', name: 'Egg Burger', price: '€ 10,00',
-        desc_it: 'hamburger 200 gr. formaggio cheddar, pomodoro, insalata, uovo fritto, olio, origano',
-        desc_en: '<strong>EN:</strong> hamburger 200gr, cheddar cheese, tomato slice, salad, fried egg, olive oil, oregano<br><strong>ES:</strong> hamburguesa 200gr, queso cheddar, tomate, ensalada, huevo frito, aceite de oliva, orégano<br><strong>DE:</strong> Hamburger 200g, Cheddarkäse, Tomate, Salat, Spiegelei, Olivenöl, Oregano<br><strong>FR:</strong> hamburger 200g, fromage cheddar, tomate, salade, œuf au plat, huile d\'olive, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
+    const items = await MenuItem.find({});
+    let count = 0;
 
-      // --- SANDWICHES ---
-      {
-        tab: 'food', category: 'Panini / Sandwiches', name: 'Caprese', price: '€ 5,50',
-        desc_it: 'pomodoro, mozzarella, olio d\'oliva, basilico, origano',
-        desc_en: '<strong>EN:</strong> tomato slice, mozzarella cheese, olive oil, basil, oregano<br><strong>ES:</strong> tomate, queso mozzarella, aceite de oliva, albahaca, orégano<br><strong>DE:</strong> Tomate, Mozzarella, Olivenöl, Basilikum, Oregano<br><strong>FR:</strong> tomate, mozzarella, huile d\'olive, basilic, origan',
-        isVegetarian: true, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Panini / Sandwiches', name: 'Cotto', price: '€ 6,00',
-        desc_it: 'prosciutto cotto, pomodoro, mozzarella, olio d\'oliva, origano',
-        desc_en: '<strong>EN:</strong> ham, tomato slice, mozzarella cheese, olive oil, oregano<br><strong>ES:</strong> jamón cocido, tomate, queso mozzarella, aceite de oliva, orégano<br><strong>DE:</strong> Kochschinken, Tomate, Mozzarella, Olivenöl, Oregano<br><strong>FR:</strong> jambon blanc, tomate, mozzarella, huile d\'olive, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Panini / Sandwiches', name: 'Paladino', price: '€ 6,50',
-        desc_it: 'salame piccante, mozzarella, tabasco, olio d\'oliva, origano',
-        desc_en: '<strong>EN:</strong> spicy salami, mozzarella cheese, tabasco sauce, olive oil, oregano<br><strong>ES:</strong> salami picante, queso mozzarella, salsa tabasco, aceite de oliva, orégano<br><strong>DE:</strong> scharfe Salami, Mozzarella, Tabascosauce, Olivenöl, Oregano<br><strong>FR:</strong> salami piquant, mozzarella, sauce tabasco, huile d\'olive, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Panini / Sandwiches', name: 'Hot-dog', price: '€ 6,00',
-        desc_it: 'wurstel, ketchup, maionese',
-        desc_en: '<strong>EN:</strong> sausage, ketchup, mayo<br><strong>ES:</strong> salchicha, ketchup, mayonesa<br><strong>DE:</strong> Würstchen, Ketchup, Mayonnaise<br><strong>FR:</strong> saucisse, ketchup, mayonnaise',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Panini / Sandwiches', name: 'Solito', price: '€ 7,50',
-        desc_it: 'prosciutto crudo, mozzarella, pomodoro, insalata, olio d\'oliva, origano',
-        desc_en: '<strong>EN:</strong> parma ham, mozzarella cheese, tomato slice, salad, olive oil, oregano<br><strong>ES:</strong> jamón de Parma, queso mozzarella, tomate, ensalada, aceite de oliva, orégano<br><strong>DE:</strong> Parmaschinken, Mozzarella, Tomate, Salat, Olivenöl, Oregano<br><strong>FR:</strong> jambon de Parme, mozzarella, tomate, salade, huile d\'olive, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Panini / Sandwiches', name: 'Tonnato', price: '€ 7,50',
-        desc_it: 'tonno, pomodoro, mozzarella, insalata, olio d\'oliva, origano',
-        desc_en: '<strong>EN:</strong> tuna, tomato slice, mozzarella cheese, salad, olive oil, oregano<br><strong>ES:</strong> atún, tomate, queso mozzarella, ensalada, aceite de oliva, orégano<br><strong>DE:</strong> Thunfisch, Tomate, Mozzarella, Salat, Olivenöl, Oregano<br><strong>FR:</strong> thon, tomate, mozzarella, salade, huile d\'olive, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Panini / Sandwiches', name: 'Siciliano', price: '€ 7,00',
-        desc_it: 'pepato, olive, acciughe, olio d\'oliva, pepe, origano',
-        desc_en: '<strong>EN:</strong> pepato cheese, olives, anchovies, olive oil, pepper, oregano<br><strong>ES:</strong> queso pepato, aceitunas, anchoas, aceite de oliva, pimienta, orégano<br><strong>DE:</strong> Pepato-Käse, Oliven, Sardellen, Olivenöl, Pfeffer, Oregano<br><strong>FR:</strong> fromage pepato, olives, anchois, huile d\'olive, poivre, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Panini / Sandwiches', name: 'Vegetariano', price: '€ 7,50',
-        desc_it: 'pomodoro, mozzarella, verdure grigliate, olio, origano',
-        desc_en: '<strong>EN:</strong> tomato slice, mozzarella cheese, grilled vegetables, olive oil, oregano<br><strong>ES:</strong> tomate, queso mozzarella, verduras asadas, aceite de oliva, orégano<br><strong>DE:</strong> Tomate, Mozzarella, gegrilltes Gemüse, Olivenöl, Oregano<br><strong>FR:</strong> tomate, mozzarella, légumes grillés, huile d\'olive, origan',
-        isVegetarian: true, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Panini / Sandwiches', name: 'Orlando', price: '€ 8,50',
-        desc_it: 'pollo, mozzarella, pomodoro, insalata, olio d\'oliva, origano',
-        desc_en: '<strong>EN:</strong> chicken, mozzarella cheese, tomato slice, salad, olive oil, oregano<br><strong>ES:</strong> pollo, queso mozzarella, tomate, ensalada, aceite de oliva, orégano<br><strong>DE:</strong> Hähnchen, Mozzarella, Tomate, Salat, Olivenöl, Oregano<br><strong>FR:</strong> poulet, mozzarella, tomate, salade, huile d\'olive, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Panini / Sandwiches', name: 'Rinaldo', price: '€ 10,00',
-        desc_it: 'philadelphia, salmone affumicato, insalata, olio d\'oliva, origano',
-        desc_en: '<strong>EN:</strong> philadelphia cream cheese, smoked salmon, salad, olive oil, oregano<br><strong>ES:</strong> queso philadelphia, salmón ahumado, ensalada, aceite de oliva, orégano<br><strong>DE:</strong> Philadelphia-Frischkäse, Räucherlachs, Salat, Olivenöl, Oregano<br><strong>FR:</strong> fromage philadelphia, saumon fumé, salade, huile d\'olive, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
-      {
-        tab: 'food', category: 'Panini / Sandwiches', name: 'Angelica', price: '€ 9,50',
-        desc_it: 'bresaola, rucola, grana, olio d\'oliva, origano',
-        desc_en: '<strong>EN:</strong> air dried beef, rocket plant, slivers of parmesan, olive oil, oregano<br><strong>ES:</strong> bresaola (ternera curada), rúcula, lascas de parmesano, aceite de oliva, orégano<br><strong>DE:</strong> Bresaola (luftgetrocknetes Rindfleisch), Rucola, Parmesansplitter, Olivenöl, Oregano<br><strong>FR:</strong> bresaola (bœuf séché), roquette, copeaux de parmesan, huile d\'olive, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: false, available: true
-      },
+    for (let item of items) {
+      // If the English description contains our stacked language tags
+      if (item.desc_en && item.desc_en.includes('<strong>EN:</strong>')) {
+        const parts = item.desc_en.split('<br>');
+        
+        parts.forEach(part => {
+          if (part.includes('EN:')) item.desc_en = part.replace('<strong>EN:</strong>', '').trim();
+          if (part.includes('ES:')) item.desc_es = part.replace('<strong>ES:</strong>', '').trim();
+          if (part.includes('DE:')) item.desc_de = part.replace('<strong>DE:</strong>', '').trim();
+          if (part.includes('FR:')) item.desc_fr = part.replace('<strong>FR:</strong>', '').trim();
+        });
 
-      // --- SALADS ---
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Insalata mista, pomodorini, mais', price: '€ 7,50',
-        desc_it: 'insalata mista, pomodorini, mais',
-        desc_en: '<strong>EN:</strong> mixed salad, cherry tomatoes, sweetcorn<br><strong>ES:</strong> ensalada mixta, tomates cherry, maíz dulce<br><strong>DE:</strong> gemischter Salat, Kirschtomaten, Mais<br><strong>FR:</strong> salade mixte, tomates cerises, maïs',
-        isVegetarian: true, isVegan: true, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Caprese', price: '€ 8,50',
-        desc_it: 'pomodoro, mozzarella, basilico, origano',
-        desc_en: '<strong>EN:</strong> tomato, mozzarella cheese, basil, oregano<br><strong>ES:</strong> tomate, queso mozzarella, albahaca, orégano<br><strong>DE:</strong> Tomate, Mozzarella, Basilikum, Oregano<br><strong>FR:</strong> tomate, mozzarella, basilic, origan',
-        isVegetarian: true, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Caprese con tonno', price: '€ 11,00',
-        desc_it: 'pomodoro, mozzarella, tonno, basilico, origano',
-        desc_en: '<strong>EN:</strong> tomato, mozzarella cheese, tuna, basil, oregano<br><strong>ES:</strong> tomate, queso mozzarella, atún, albahaca, orégano<br><strong>DE:</strong> Tomate, Mozzarella, Thunfisch, Basilikum, Oregano<br><strong>FR:</strong> tomate, mozzarella, thon, basilic, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Caprese con crudo', price: '€ 11,00',
-        desc_it: 'pomodoro, mozzarella, prosciutto crudo, basilico, origano',
-        desc_en: '<strong>EN:</strong> tomato, mozzarella cheese, parma ham, basil, oregano<br><strong>ES:</strong> tomate, queso mozzarella, jamón de Parma, albahaca, orégano<br><strong>DE:</strong> Tomate, Mozzarella, Parmaschinken, Basilikum, Oregano<br><strong>FR:</strong> tomate, mozzarella, jambon de Parme, basilic, origan',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Bresaola, Rucola, Scaglie', price: '€ 13,00',
-        desc_it: 'bresaola, rucola, scaglie di grana',
-        desc_en: '<strong>EN:</strong> air dried beef, rocket plant, slivers of parmesan<br><strong>ES:</strong> bresaola, rúcula, lascas de parmesano<br><strong>DE:</strong> Bresaola, Rucola, Parmesansplitter<br><strong>FR:</strong> bresaola, roquette, copeaux de parmesan',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Crudo e melone', price: '€ 9,00',
-        desc_it: 'prosciutto crudo e melone',
-        desc_en: '<strong>EN:</strong> parma ham and melon<br><strong>ES:</strong> jamón de Parma y melón<br><strong>DE:</strong> Parmaschinken und Melone<br><strong>FR:</strong> jambon de Parme et melon',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Isola Bella', price: '€ 13,00',
-        desc_it: 'insalata, pomodorini, salmone affumicato, mais',
-        desc_en: '<strong>EN:</strong> salad, cherry tomatoes, smoked salmon, sweetcorn<br><strong>ES:</strong> ensalada, tomates cherry, salmón ahumado, maíz<br><strong>DE:</strong> Salat, Kirschtomaten, Räucherlachs, Mais<br><strong>FR:</strong> salade, tomates cerises, saumon fumé, maïs',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Sicilia', price: '€ 12,00',
-        desc_it: 'insalata, uovo, tonno, mozzarella, mais',
-        desc_en: '<strong>EN:</strong> salad, boiled egg, tuna, mozzarella cheese, sweetcorn<br><strong>ES:</strong> ensalada, huevo cocido, atún, queso mozzarella, maíz<br><strong>DE:</strong> Salat, gekochtes Ei, Thunfisch, Mozzarella, Mais<br><strong>FR:</strong> salade, œuf dur, thon, mozzarella, maïs',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Etna', price: '€ 13,00',
-        desc_it: 'insalata, mais, pomodorini, bresaola, philadelphia',
-        desc_en: '<strong>EN:</strong> salad, sweetcorn, cherry tomatoes, air dried beef, philadelphia cream cheese<br><strong>ES:</strong> ensalada, maíz, tomates cherry, bresaola, queso philadelphia<br><strong>DE:</strong> Salat, Mais, Kirschtomaten, Bresaola, Philadelphia-Frischkäse<br><strong>FR:</strong> salade, maïs, tomates cerises, bresaola, fromage philadelphia',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Taormina', price: '€ 12,00',
-        desc_it: 'insalata, mais, pomodorini, crudo, grana',
-        desc_en: '<strong>EN:</strong> salad, sweetcorn, cherry tomatoes, parma ham, slivers of parmesan<br><strong>ES:</strong> ensalada, maíz, tomates cherry, jamón de Parma, lascas de parmesano<br><strong>DE:</strong> Salat, Mais, Kirschtomaten, Parmaschinken, Parmesansplitter<br><strong>FR:</strong> salade, maïs, tomates cerises, jambon de Parme, copeaux de parmesan',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Bufala e salmone', price: '€ 15,00',
-        desc_it: 'mozzarella di bufala e salmone',
-        desc_en: '<strong>EN:</strong> buffalo\'s mozzarella and salmon<br><strong>ES:</strong> queso mozzarella de búfala y salmón<br><strong>DE:</strong> Büffelmozzarella und Lachs<br><strong>FR:</strong> mozzarella de bufflonne et saumon',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      },
-      {
-        tab: 'food', category: 'Insalate / Salad', name: 'Burrata', price: '€ 11,00',
-        desc_it: 'pomodorini, rucola, burrata, crudo',
-        desc_en: '<strong>EN:</strong> cherry tomatoes, rocket plant, burrata, parma ham<br><strong>ES:</strong> tomates cherry, rúcula, queso burrata, jamón de Parma<br><strong>DE:</strong> Kirschtomaten, Rucola, Burrata, Parmaschinken<br><strong>FR:</strong> tomates cerises, roquette, burrata, jambon de Parme',
-        isVegetarian: false, isVegan: false, isGlutenFree: true, available: true
-      }
-    ];
-
-    let updatedCount = 0;
-    let createdCount = 0;
-
-    for (let item of menuItems) {
-      const existing = await MenuItem.findOne({ name: item.name, category: item.category });
-      
-      if (existing) {
-        Object.assign(existing, item);
-        await existing.save();
-        updatedCount++;
-      } else {
-        item.id = crypto.randomBytes(4).toString('hex');
-        await new MenuItem(item).save();
-        createdCount++;
+        await item.save();
+        count++;
       }
     }
-
-    res.send(`<h1>✅ Batch 2 Success!</h1><p>Updated ${updatedCount} existing items.</p><p>Created ${createdCount} new items.</p>`);
+    res.send(`<h1>✅ Fixed ${count} items!</h1><p>The stacked languages have been cleanly separated in the database.</p>`);
   } catch (err) {
-    console.error(err);
-    res.status(500).send(`<h1>❌ Error:</h1><p>${err.message}</p>`);
+    res.status(500).send(err.message);
   }
 });
 
