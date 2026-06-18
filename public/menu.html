@@ -381,8 +381,13 @@
     const searchInput = document.getElementById('menu-search');
     if(searchInput) searchInput.placeholder = t.searchPlaceholder;
     
-    // 4. RE-RENDER THE MENU TO UPDATE DESCRIPTIONS
-    fetchMenu(); 
+    // FIX: Redraw the currently active tab instead of reloading the whole menu!
+  const activeTabBtn = document.querySelector('.tab-btn.active');
+  if (activeTabBtn) {
+    activeTabBtn.click(); 
+  } else {
+    fetchMenu(); // Fallback just in case no tab is active
+  }
   }
 
   function getToken() { return new URLSearchParams(window.location.search).get('token'); }
@@ -482,19 +487,17 @@ async function fetchMenu() {
             const targetCategory = subCat ? `${mainCat} - ${subCat}` : mainCat;
             tabItems.filter(i => i.category === targetCategory).forEach(item => {
               
-              // Language Selection Logic
-              let selectedDesc = '';
-              if (currentLang === 'it' && item.desc_it) {
-                selectedDesc = item.desc_it;
-              } else if (currentLang === 'es' && item.desc_es) {
-                selectedDesc = item.desc_es;
-              } else if (currentLang !== 'it' && item.desc_en) {
-                selectedDesc = item.desc_en; 
-              } else if (item.desc_it) {
-                selectedDesc = item.desc_it; 
-              } else {
-                selectedDesc = item.desc || ''; 
-              }
+               // --- DYNAMIC 5-LANGUAGE SELECTOR (Default: English) ---
+            const currentLang = document.getElementById('lang-switcher') ? document.getElementById('lang-switcher').value : 'en';
+
+            // Start with English. If missing, fallback to Italian, then legacy desc.
+            let selectedDesc = item.desc_en || item.desc_it || item.desc || ''; 
+            
+            // Override with the requested language if it exists in the database
+            if (currentLang === 'it' && item.desc_it) selectedDesc = item.desc_it;
+            if (currentLang === 'es' && item.desc_es) selectedDesc = item.desc_es;
+            if (currentLang === 'de' && item.desc_de) selectedDesc = item.desc_de;
+            if (currentLang === 'fr' && item.desc_fr) selectedDesc = item.desc_fr;
 
               // --- NEW DIETARY & BIO BADGE LOGIC (WINE) ---
               let badges = '';
@@ -531,20 +534,17 @@ async function fetchMenu() {
           html += `<div class="category-title">${cat}</div>`;
           tabItems.filter(i => i.category === cat).forEach(item => {
             
-            // Language Selection Logic
-            let selectedDesc = '';
-            if (currentLang === 'it' && item.desc_it) {
-              selectedDesc = item.desc_it;
-            } else if (currentLang === 'es' && item.desc_es) {
-              selectedDesc = item.desc_es;
-            } else if (currentLang !== 'it' && item.desc_en) {
-              selectedDesc = item.desc_en; 
-            } else if (item.desc_it) {
-              selectedDesc = item.desc_it; 
-            } else {
-              selectedDesc = item.desc || ''; 
-            }
+           // --- DYNAMIC 5-LANGUAGE SELECTOR (Default: English) ---
+            const currentLang = document.getElementById('lang-switcher') ? document.getElementById('lang-switcher').value : 'en';
 
+            // Start with English. If missing, fallback to Italian, then legacy desc.
+            let selectedDesc = item.desc_en || item.desc_it || item.desc || ''; 
+            
+            // Override with the requested language if it exists in the database
+            if (currentLang === 'it' && item.desc_it) selectedDesc = item.desc_it;
+            if (currentLang === 'es' && item.desc_es) selectedDesc = item.desc_es;
+            if (currentLang === 'de' && item.desc_de) selectedDesc = item.desc_de;
+            if (currentLang === 'fr' && item.desc_fr) selectedDesc = item.desc_fr;
             // --- NEW DIETARY & BIO BADGE LOGIC (STANDARD) ---
             let badges = '';
             if (item.isVegetarian) badges += '<span title="Vegetarian" style="font-size: 16px; margin-left: 4px;">🥕</span>';
