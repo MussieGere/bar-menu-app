@@ -191,6 +191,14 @@ input:checked + .slider:before { transform: translateX(26px); }
       <label>Description (English) - Optional</label>
       <input type="text" id="f-desc-en">
     </div>
+    <label style="margin-top: 15px;">Description (Spanish) - Optional</label>
+      <input type="text" id="f-desc-es" placeholder="e.g. queso mozzarella, tomate...">
+
+      <label style="margin-top: 15px;">Description (German) - Optional</label>
+      <input type="text" id="f-desc-de" placeholder="e.g. Mozzarella, Tomate...">
+
+      <label style="margin-top: 15px;">Description (French) - Optional</label>
+      <input type="text" id="f-desc-fr" placeholder="e.g. mozzarella, tomate...">
     <div class="form-group">
       <label>Item Image (Optional - JPG, PNG, WebP up to 5MB)</label>
       <input type="file" id="f-image" accept="image/jpeg,image/png,image/webp">
@@ -601,6 +609,9 @@ input:checked + .slider:before { transform: translateX(26px); }
         price: document.getElementById('f-price') ? '€ ' + document.getElementById('f-price').value : '',
         desc_it: document.getElementById('f-desc-it') ? document.getElementById('f-desc-it').value : '',
         desc_en: document.getElementById('f-desc-en') ? document.getElementById('f-desc-en').value : '',
+        desc_es: document.getElementById('f-desc-es') ? document.getElementById('f-desc-es').value : '',
+        desc_de: document.getElementById('f-desc-de') ? document.getElementById('f-desc-de').value : '',
+        desc_fr: document.getElementById('f-desc-fr') ? document.getElementById('f-desc-fr').value : '',
         image: imagePath,
         available: true,
         // Safely check the dietary fields
