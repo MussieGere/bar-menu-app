@@ -380,7 +380,6 @@ async function fetchMenu() {
   globalMenuData = await res.json();
   renderMenu();
 }
-
 // --- 4. INSTANT REDRAW FUNCTION ---
 function renderMenu() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -431,17 +430,11 @@ function renderMenu() {
     if (menuType === 'desserts') {
       tabItems = globalMenuData.filter(i => {
         if (!i.available) return false;
-        
-        // 1. Always include standard desserts and ice cream
         if (i.tab === 'desserts') return true;
-        
-        // 2. If it is from the Breakfast category, filter out the savory stuff!
         if (i.category && i.category.includes('Colazione')) {
           const itemName = i.name.toLowerCase();
-          if (itemName.includes('uova') || itemName.includes('omelette')) {
-            return false; // Hide eggs and omelettes
-          }
-          return true; // Keep the pastries, muffins, and cakes
+          if (itemName.includes('uova') || itemName.includes('omelette')) return false;
+          return true; 
         }
         return false;
       });
@@ -487,9 +480,27 @@ function renderMenu() {
         });
       });
     } else {
-      const categories = [...new Set(tabItems.map(i => i.category))];
+      let categories = [...new Set(tabItems.map(i => i.category))];
+      
+      // --- NEW: Custom Category Sorting for Desserts ---
+      if (menuType === 'desserts') {
+        const order = ['Gelateria / Ice cream', 'Dolci / Desserts', 'Colazione / Breakfast'];
+        categories.sort((a, b) => {
+          let valA = order.includes(a) ? order.indexOf(a) : 99;
+          let valB = order.includes(b) ? order.indexOf(b) : 99;
+          return valA - valB;
+        });
+      }
+
       categories.forEach(cat => {
-        html += `<div class="category-title">${cat}</div>`;
+        // --- NEW: Rename Breakfast to Pastries on the Desserts view ---
+        let displayCat = cat;
+        if (menuType === 'desserts' && cat === 'Colazione / Breakfast') {
+          displayCat = 'Pasticceria / Pastries'; 
+        }
+
+        html += `<div class="category-title">${displayCat}</div>`;
+        
         tabItems.filter(i => i.category === cat).forEach(item => {
           let selectedDesc = item.desc_en || item.desc_it || item.desc || '';
           if (currentLang === 'it' && item.desc_it) selectedDesc = item.desc_it;
