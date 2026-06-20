@@ -674,132 +674,140 @@ app.get('/api/fix-languages', async (req, res) => {
   }
 });
 
-// --- FINAL BATCH: DRINKS, BREAKFAST, ICE CREAM & DESSERTS ---
-app.get('/api/run-final-batch', async (req, res) => {
+// --- THE REAL COCKTAILS & SPIRITS IMPORT ---
+app.get('/api/run-real-cocktails', async (req, res) => {
   try {
     const crypto = require('crypto');
     
-    // Clear out any messy old entries for these categories to avoid duplicates
-    const categoriesToClear = [
-      'Birre / Beers', 'Vini / Wine', 'Liquori / Liquors', 'Aperitivi / Long drink',
-      'Bevande / Soft drink', 'Caffetteria / Coffee', 'Colazione / Breakfast',
-      'Tavola Calda / Street Food', 'Gelateria / Ice cream', 'Dolci / Desserts'
-    ];
-    await MenuItem.deleteMany({ category: { $in: categoriesToClear } });
+    // 1. Wipe out the old, incomplete drink categories so we don't get duplicates
+    const oldCategories = ['Aperitivi / Long drink', 'Liquori / Liquors', 'Sparkling & Spritz'];
+    await MenuItem.deleteMany({ category: { $in: oldCategories } });
+    
+    // Also wipe out any previous Distillati just in case
+    await MenuItem.deleteMany({ category: /Distillati/ });
+    await MenuItem.deleteMany({ category: /Pre-Dinner/ });
+    await MenuItem.deleteMany({ category: /After Dinner/ });
+    await MenuItem.deleteMany({ category: /All Time/ });
+    await MenuItem.deleteMany({ category: /Gin Tonic/ });
 
-    const finalItems = [
-      // --- CAFFETTERIA / COFFEE ---
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Espresso', price: '€ 1,50', desc_it: 'caffè espresso', desc_en: 'espresso coffee', desc_es: 'café espresso', desc_de: 'Espresso', desc_fr: 'café expresso', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Espresso freddo', price: '€ 2,50', desc_it: 'espresso freddo', desc_en: 'cold espresso', desc_es: 'espresso frío', desc_de: 'kalter Espresso', desc_fr: 'expresso froid', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Espresso affogato', price: '€ 3,50', desc_it: 'espresso affogato', desc_en: 'espresso affogato', desc_es: 'espresso affogato', desc_de: 'Espresso Affogato', desc_fr: 'expresso affogato', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Caffè decaffeinato', price: '€ 1,50', desc_it: 'caffè decaffeinato', desc_en: 'decaffeinated coffee', desc_es: 'café descafeinado', desc_de: 'koffeinfreier Kaffee', desc_fr: 'café décaféiné', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Caffè d\'orzo', price: '€ 2,00', desc_it: 'caffè d\'orzo', desc_en: 'barley coffee', desc_es: 'café de cebada', desc_de: 'Gerstenkaffee', desc_fr: 'café d\'orge', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Caffè americano', price: '€ 2,00', desc_it: 'caffè americano', desc_en: 'black americano', desc_es: 'café americano negro', desc_de: 'schwarzer Americano', desc_fr: 'café américain noir', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Caffè americano con latte', price: '€ 2,50', desc_it: 'caffè americano con latte', desc_en: 'white americano', desc_es: 'americano con leche', desc_de: 'weißer Americano', desc_fr: 'café américain au lait', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Caffè ginseng', price: '€ 2,30', desc_it: 'caffè al ginseng', desc_en: 'ginseng coffee', desc_es: 'café al ginseng', desc_de: 'Ginseng-Kaffee', desc_fr: 'café au ginseng', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Caffè con panna', price: '€ 2,50', desc_it: 'caffè con panna', desc_en: 'coffee with cream', desc_es: 'café con nata', desc_de: 'Kaffee mit Sahne', desc_fr: 'café avec crème', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Caffè latte', price: '€ 2,50', desc_it: 'caffè latte', desc_en: 'milk coffee', desc_es: 'café con leche', desc_de: 'Milchkaffee', desc_fr: 'café au lait', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Caffè corretto', price: '€ 3,00', desc_it: 'caffè corretto', desc_en: 'spiked coffee', desc_es: 'café con licor', desc_de: 'Kaffee mit Schuss', desc_fr: 'café arrosé', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Crema di caffè', price: '€ 3,00', desc_it: 'crema di caffè', desc_en: 'coffee cream', desc_es: 'crema de café', desc_de: 'Kaffeecreme', desc_fr: 'crème de café', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Cappuccino', price: '€ 2,50', desc_it: 'cappuccino', desc_en: 'cappuccino', desc_es: 'capuchino', desc_de: 'Cappuccino', desc_fr: 'cappuccino', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Cappuccino di soia o mandorla', price: '€ 3,00', desc_it: 'cappuccino di soia o mandorla', desc_en: 'soya or almond cappuccino', desc_es: 'capuchino de soja o almendra', desc_de: 'Soja- oder Mandel-Cappuccino', desc_fr: 'cappuccino au lait de soja ou d\'amande', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Latte', price: '€ 2,00', desc_it: 'latte', desc_en: 'milk', desc_es: 'leche', desc_de: 'Milch', desc_fr: 'lait', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Latte e caffè', price: '€ 2,50', desc_it: 'latte e caffè', desc_en: 'milk and espresso', desc_es: 'leche y espresso', desc_de: 'Milch und Espresso', desc_fr: 'lait et expresso', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Latte di soia o mandorla', price: '€ 3,00', desc_it: 'latte di soia o mandorla', desc_en: 'soya or almond milk', desc_es: 'leche de soja o almendra', desc_de: 'Soja- oder Mandelmilch', desc_fr: 'lait de soja ou d\'amande', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Mokaccino', price: '€ 3,50', desc_it: 'espresso, cioccolata calda, schiuma di latte', desc_en: 'espresso, hot chocolate, milk foam', desc_es: 'espresso, chocolate caliente, espuma de leche', desc_de: 'Espresso, heiße Schokolade, Milchschaum', desc_fr: 'expresso, chocolat chaud, mousse de lait', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'The Caldo', price: '€ 3,00', desc_it: 'the caldo', desc_en: 'hot tea', desc_es: 'té caliente', desc_de: 'heißer Tee', desc_fr: 'thé chaud', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Camomilla', price: '€ 3,00', desc_it: 'camomilla', desc_en: 'chamomile tea', desc_es: 'té de manzanilla', desc_de: 'Kamillentee', desc_fr: 'tisane à la camomille', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Caffetteria / Coffee', name: 'Cioccolata Calda', price: '€ 3,50', desc_it: 'cioccolata calda', desc_en: 'hot chocolate', desc_es: 'chocolate caliente', desc_de: 'heiße Schokolade', desc_fr: 'chocolat chaud', isVegetarian: true, isVegan: false, isGlutenFree: true },
+    const drinks = [
+      // --- SPARKLING & SPRITZ (8€) ---
+      { tab: 'cocktails', category: 'Sparkling & Spritz', name: 'Bellini', price: '€ 8,00', desc_it: 'Pesca, Prosecco', desc_en: 'Peach, Prosecco' },
+      { tab: 'cocktails', category: 'Sparkling & Spritz', name: 'Rossini', price: '€ 8,00', desc_it: 'Fragola, Prosecco', desc_en: 'Strawberry, Prosecco' },
+      { tab: 'cocktails', category: 'Sparkling & Spritz', name: 'Mimosa', price: '€ 8,00', desc_it: 'Arancia, Prosecco', desc_en: 'Orange, Prosecco' },
+      { tab: 'cocktails', category: 'Sparkling & Spritz', name: 'Kir Royal', price: '€ 8,00', desc_it: 'Creme de Cassis, Prosecco', desc_en: 'Creme de Cassis, Prosecco' },
+      { tab: 'cocktails', category: 'Sparkling & Spritz', name: 'Aperol Spritz', price: '€ 8,00', desc_it: 'Aperol, Prosecco, Soda water', desc_en: 'Aperol, Prosecco, Soda water' },
+      { tab: 'cocktails', category: 'Sparkling & Spritz', name: 'Martini Spritz', price: '€ 8,00', desc_it: 'Martini bianco, Prosecco, Soda Water', desc_en: 'White Martini, Prosecco, Soda Water' },
+      { tab: 'cocktails', category: 'Sparkling & Spritz', name: 'Campari Spritz', price: '€ 8,00', desc_it: 'Campari, Prosecco, Soda Water', desc_en: 'Campari, Prosecco, Soda Water' },
+      { tab: 'cocktails', category: 'Sparkling & Spritz', name: 'Hugo Spritz', price: '€ 8,00', desc_it: 'Liquore Sambuco, Prosecco, Soda Water', desc_en: 'Elderflower Liqueur, Prosecco, Soda Water' },
+      { tab: 'cocktails', category: 'Sparkling & Spritz', name: 'Limoncello Spritz', price: '€ 8,00', desc_it: 'Limoncello, Prosecco, Soda Water', desc_en: 'Limoncello, Prosecco, Soda Water' },
 
-      // --- BEVANDE / SOFT DRINKS ---
-      { tab: 'bar', category: 'Bevande / Soft drink', name: 'Acqua 50 cl', price: '€ 1,30', desc_it: 'acqua naturale o frizzante', desc_en: 'still or sparkling water', desc_es: 'agua sin o con gas', desc_de: 'stilles oder sprudelndes Wasser', desc_fr: 'eau plate ou gazeuse', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Bevande / Soft drink', name: 'Acqua 1L', price: '€ 2,50', desc_it: 'acqua naturale o frizzante', desc_en: 'still or sparkling water', desc_es: 'agua sin o con gas', desc_de: 'stilles oder sprudelndes Wasser', desc_fr: 'eau plate ou gazeuse', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Bevande / Soft drink', name: 'Acqua tonica / Tonica al limone', price: '€ 2,50', desc_it: 'acqua tonica o tonica al limone', desc_en: 'tonic or tonic lemon', desc_es: 'tónica o tónica de limón', desc_de: 'Tonic Water oder Lemon Tonic', desc_fr: 'eau tonique ou tonique au citron', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Bevande / Soft drink', name: 'Coca Cola, Fanta, Sprite (33 cl)', price: '€ 2,50', desc_it: 'coca cola, fanta, sprite', desc_en: 'coca cola, fanta, sprite', desc_es: 'coca cola, fanta, sprite', desc_de: 'Coca Cola, Fanta, Sprite', desc_fr: 'coca cola, fanta, sprite', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Bevande / Soft drink', name: 'Lemon Soda, Chinotto, The Freddo (33 cl)', price: '€ 2,50', desc_it: 'lemon soda, chinotto, the freddo', desc_en: 'lemon soda, chinotto, iced tea', desc_es: 'lemon soda, chinotto, té helado', desc_de: 'Lemon Soda, Chinotto, Eistee', desc_fr: 'lemon soda, chinotto, thé glacé', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Bevande / Soft drink', name: 'Red bull', price: '€ 4,00', desc_it: 'energy drink', desc_en: 'energy drink', desc_es: 'bebida energética', desc_de: 'Energy-Drink', desc_fr: 'boisson énergisante', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Bevande / Soft drink', name: 'Spremuta di arancia', price: '€ 3,50', desc_it: 'spremuta d\'arancia fresca', desc_en: 'fresh orange juice', desc_es: 'zumo de naranja natural', desc_de: 'frisch gepresster Orangensaft', desc_fr: 'jus d\'orange pressé', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Bevande / Soft drink', name: 'Spremuta di limone', price: '€ 4,00', desc_it: 'spremuta di limone fresca', desc_en: 'fresh lemon juice', desc_es: 'zumo de limón natural', desc_de: 'frisch gepresster Zitronensaft', desc_fr: 'jus de citron pressé', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Bevande / Soft drink', name: 'Succo di frutta', price: '€ 3,00', desc_it: 'succo di frutta in bottiglia', desc_en: 'fruit juice in bottles', desc_es: 'zumo de frutas en botella', desc_de: 'Fruchtsaft in Flaschen', desc_fr: 'jus de fruits en bouteille', isVegetarian: true, isVegan: true, isGlutenFree: true },
+      // --- PRE-DINNER (9€) ---
+      { tab: 'cocktails', category: 'Pre-Dinner', name: 'Americano', price: '€ 9,00', desc_it: 'Martini rosso, Bitter Campari, Soda Water', desc_en: 'Red Martini, Bitter Campari, Soda Water' },
+      { tab: 'cocktails', category: 'Pre-Dinner', name: 'Negroni', price: '€ 9,00', desc_it: 'Bitter Campari, Martini rosso, Gin', desc_en: 'Bitter Campari, Red Martini, Gin' },
+      { tab: 'cocktails', category: 'Pre-Dinner', name: 'Dry Martini', price: '€ 9,00', desc_it: 'Gin, Martini dry', desc_en: 'Gin, Dry Martini' },
+      { tab: 'cocktails', category: 'Pre-Dinner', name: 'Vodka Martini', price: '€ 9,00', desc_it: 'Vodka, Martini dry', desc_en: 'Vodka, Dry Martini' },
+      { tab: 'cocktails', category: 'Pre-Dinner', name: 'Daiquiri', price: '€ 9,00', desc_it: 'Rum, succo di limone, Sciroppo di zucchero', desc_en: 'Rum, lemon juice, Sugar syrup' },
+      { tab: 'cocktails', category: 'Pre-Dinner', name: 'Manhattan', price: '€ 9,00', desc_it: 'Canadian whisky, Martini rosso, Angostura', desc_en: 'Canadian whisky, Red Martini, Angostura' },
 
-      // --- BIRRE / BEERS ---
-      { tab: 'bar', category: 'Birre / Beers', name: 'Ceres', price: '€ 4,00', desc_it: 'birra', desc_en: 'beer', desc_es: 'cerveza', desc_de: 'Bier', desc_fr: 'bière', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Heineken', price: '€ 4,00', desc_it: 'birra', desc_en: 'beer', desc_es: 'cerveza', desc_de: 'Bier', desc_fr: 'bière', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Beck\'s', price: '€ 3,50', desc_it: 'birra', desc_en: 'beer', desc_es: 'cerveza', desc_de: 'Bier', desc_fr: 'bière', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Erdinger Weiss', price: '€ 5,50', desc_it: 'birra weiss', desc_en: 'wheat beer', desc_es: 'cerveza de trigo', desc_de: 'Weißbier', desc_fr: 'bière blanche', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Messina cristalli di sale', price: '€ 3,50', desc_it: 'birra ai cristalli di sale', desc_en: 'salt crystals beer', desc_es: 'cerveza con cristales de sal', desc_de: 'Bier mit Salzkristallen', desc_fr: 'bière aux cristaux de sel', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Corona', price: '€ 4,00', desc_it: 'birra', desc_en: 'beer', desc_es: 'cerveza', desc_de: 'Bier', desc_fr: 'bière', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Nazionali 33 cl', price: '€ 3,00', desc_it: 'birra nazionale 33cl', desc_en: 'national beer 33 cl', desc_es: 'cerveza nacional 33 cl', desc_de: 'nationales Bier 33 cl', desc_fr: 'bière nationale 33 cl', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Nazionali 66 cl', price: '€ 5,00', desc_it: 'birra nazionale 66cl', desc_en: 'national beer 66 cl', desc_es: 'cerveza nacional 66 cl', desc_de: 'nationales Bier 66 cl', desc_fr: 'bière nationale 66 cl', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Nazionale alla Spina Piccola 20cl', price: '€ 3,50', desc_it: 'birra piccola alla spina 20cl', desc_en: 'draft national small 20cl', desc_es: 'cerveza de barril pequeña 20cl', desc_de: 'kleines Fassbier 20cl', desc_fr: 'petite bière pression 20cl', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Nazionale alla Spina Media 40cl', price: '€ 6,00', desc_it: 'birra media alla spina 40cl', desc_en: 'draft national medium 40cl', desc_es: 'cerveza de barril mediana 40cl', desc_de: 'mittleres Fassbier 40cl', desc_fr: 'moyenne bière pression 40cl', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Birra artigianale bionda 37.5 cl', price: '€ 7,50', desc_it: 'birra artigianale bionda', desc_en: 'kraft blonde beer 37.5 cl', desc_es: 'cerveza artesanal rubia 37.5 cl', desc_de: 'helles Craft-Bier 37.5 cl', desc_fr: 'bière artisanale blonde 37.5 cl', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Birra artigianale rossa 37.5 cl', price: '€ 8,50', desc_it: 'birra artigianale rossa', desc_en: 'kraft red beer 37.5 cl', desc_es: 'cerveza artesanal roja 37.5 cl', desc_de: 'rotes Craft-Bier 37.5 cl', desc_fr: 'bière artisanale ambrée 37.5 cl', isVegetarian: true, isVegan: true, isGlutenFree: false },
-      { tab: 'bar', category: 'Birre / Beers', name: 'Birra artigianale nera 37.5 cl', price: '€ 9,50', desc_it: 'birra artigianale nera', desc_en: 'kraft black beer 37.5 cl', desc_es: 'cerveza artesanal negra 37.5 cl', desc_de: 'schwarzes Craft-Bier 37.5 cl', desc_fr: 'bière artisanale brune 37.5 cl', isVegetarian: true, isVegan: true, isGlutenFree: false },
+      // --- AFTER DINNER (9€) ---
+      { tab: 'cocktails', category: 'After Dinner', name: 'Black Russian', price: '€ 9,00', desc_it: 'Kalua, Vodka', desc_en: 'Kalua, Vodka' },
+      { tab: 'cocktails', category: 'After Dinner', name: 'French Connection', price: '€ 9,00', desc_it: 'Cognac, Amaretto', desc_en: 'Cognac, Amaretto' },
+      { tab: 'cocktails', category: 'After Dinner', name: 'God Father', price: '€ 9,00', desc_it: 'Whisky, Amaretto', desc_en: 'Whisky, Amaretto' },
+      { tab: 'cocktails', category: 'After Dinner', name: 'God Mother', price: '€ 9,00', desc_it: 'Vodka, Amaretto', desc_en: 'Vodka, Amaretto' },
+      { tab: 'cocktails', category: 'After Dinner', name: 'Irish Coffee', price: '€ 9,00', desc_it: 'Whisky Irlandese, Caffè, Panna', desc_en: 'Irish Whisky, Coffee, Cream' },
+      { tab: 'cocktails', category: 'After Dinner', name: 'Stinger', price: '€ 9,00', desc_it: 'Brandy, crema di menta bianca', desc_en: 'Brandy, white mint cream' },
+      { tab: 'cocktails', category: 'After Dinner', name: 'Espresso Martini', price: '€ 9,00', desc_it: 'Vodka, Kahlúa, Espresso, Sciroppo di zucchero', desc_en: 'Vodka, Kahlúa, Espresso, Sugar syrup' },
 
-      // --- VINI & LIQUORI / WINES & LIQUORS ---
-      { tab: 'bar', category: 'Vini / Wine', name: 'Calice bianco, rosso, rosè', price: '€ 6,00', desc_it: 'calice di vino bianco, rosso o rosè', desc_en: 'glass of white, red or rosè', desc_es: 'copa de vino blanco, tinto o rosado', desc_de: 'Glas Weiß-, Rot- oder Roséwein', desc_fr: 'verre de vin blanc, rouge ou rosé', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Vini / Wine', name: 'Flutè prosecco', price: '€ 6,00', desc_it: 'calice di prosecco', desc_en: 'prosecco flute', desc_es: 'copa de prosecco', desc_de: 'Glas Prosecco', desc_fr: 'flûte de prosecco', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Liquori / Liquors', name: 'Nazionali', price: '€ 5,00', desc_it: 'liquori nazionali', desc_en: 'national liquors', desc_es: 'licores nacionales', desc_de: 'nationale Liköre', desc_fr: 'liqueurs nationales', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Liquori / Liquors', name: 'Nazionali barricati', price: '€ 6,00', desc_it: 'liquori nazionali barricati', desc_en: 'national aged liquor', desc_es: 'licores nacionales añejos', desc_de: 'nationale gealterte Liköre', desc_fr: 'liqueurs nationales vieillies', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Liquori / Liquors', name: 'Esteri', price: '€ 6,00', desc_it: 'liquori esteri', desc_en: 'foreign liquor', desc_es: 'licores extranjeros', desc_de: 'ausländische Liköre', desc_fr: 'liqueurs étrangères', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Liquori / Liquors', name: 'Amari', price: '€ 4,00', desc_it: 'amari', desc_en: 'bitters', desc_es: 'amargos', desc_de: 'Kräuterlikör (Bitter)', desc_fr: 'amers', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Liquori / Liquors', name: 'Amaretto Disaronno', price: '€ 5,00', desc_it: 'amaretto disaronno', desc_en: 'amaretto disaronno', desc_es: 'amaretto disaronno', desc_de: 'Amaretto Disaronno', desc_fr: 'amaretto disaronno', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Liquori / Liquors', name: 'Limoncello', price: '€ 4,00', desc_it: 'limoncello', desc_en: 'limoncello', desc_es: 'limoncello', desc_de: 'Limoncello', desc_fr: 'limoncello', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'bar', category: 'Liquori / Liquors', name: 'Rosoli e Creme', price: '€ 4,00', desc_it: 'rosoli e creme', desc_en: 'liquor creme', desc_es: 'cremas de licor', desc_de: 'Likörcremes', desc_fr: 'crèmes de liqueur', isVegetarian: true, isVegan: false, isGlutenFree: true },
+      // --- ALL TIME (10€) ---
+      { tab: 'cocktails', category: 'All Time', name: 'Caipirinha', price: '€ 10,00', desc_it: 'Cachaça, Lime, Zucchero di canna', desc_en: 'Cachaça, Lime, Brown sugar' },
+      { tab: 'cocktails', category: 'All Time', name: 'Caipiroska', price: '€ 10,00', desc_it: 'Vodka, Lime, Zucchero di canna', desc_en: 'Vodka, Lime, Brown sugar' },
+      { tab: 'cocktails', category: 'All Time', name: 'Daiquiri alla frutta', price: '€ 10,00', desc_it: 'Rum, Succo di limone, Zucchero, Frutta fresca', desc_en: 'Rum, Lemon juice, Sugar, Fresh fruit' },
+      { tab: 'cocktails', category: 'All Time', name: 'Margarita', price: '€ 10,00', desc_it: 'Tequila, Triple sec, Succo di limone', desc_en: 'Tequila, Triple sec, Lemon juice' },
+      { tab: 'cocktails', category: 'All Time', name: 'Mojito', price: '€ 10,00', desc_it: 'Rum, Lime, Zucchero di canna, Menta, Soda water', desc_en: 'Rum, Lime, Brown sugar, Mint, Soda water' },
+      { tab: 'cocktails', category: 'All Time', name: 'Piña Colada', price: '€ 10,00', desc_it: 'Rum, Succo di ananas, Cocco', desc_en: 'Rum, Pineapple juice, Coconut' },
+      { tab: 'cocktails', category: 'All Time', name: 'Tequila Sunrise', price: '€ 10,00', desc_it: 'Tequila, Succo d\'arancia, Granatina', desc_en: 'Tequila, Orange juice, Grenadine' },
+      { tab: 'cocktails', category: 'All Time', name: 'Cuba Libre', price: '€ 10,00', desc_it: 'Rum, Succo di limone, Coca Cola', desc_en: 'Rum, Lemon juice, Coca Cola' },
+      { tab: 'cocktails', category: 'All Time', name: 'Bloody Mary', price: '€ 10,00', desc_it: 'Vodka, Succo di pomodoro, Succo di limone, Worcester sauce, Sale, Pepe, Tabasco', desc_en: 'Vodka, Tomato juice, Lemon juice, Worcester sauce, Salt, Pepper, Tabasco' },
+      { tab: 'cocktails', category: 'All Time', name: 'Long Island Ice Tea', price: '€ 10,00', desc_it: 'Tequila, Vodka, Rum bianco, Triple sec, Gin, Succo di limone, Zucchero', desc_en: 'Tequila, Vodka, White rum, Triple sec, Gin, Lemon juice, Sugar' },
+      { tab: 'cocktails', category: 'All Time', name: 'Moscow Mule', price: '€ 10,00', desc_it: 'Vodka, Succo di lime, Ginger beer', desc_en: 'Vodka, Lime juice, Ginger beer' },
+      { tab: 'cocktails', category: 'All Time', name: 'Pimm\'s cup n.1', price: '€ 10,00', desc_it: 'Pimm\'s, Ginger Ale, frutta mista', desc_en: 'Pimm\'s, Ginger Ale, mixed fruit' },
 
-      // --- APERITIVI / LONG DRINK ---
-      { tab: 'cocktails', category: 'Aperitivi / Long drink', name: 'Aperol Spritz', price: '€ 8,00', desc_it: 'aperol, prosecco, soda', desc_en: 'aperol, prosecco wine, soda', desc_es: 'aperol, vino prosecco, soda', desc_de: 'Aperol, Prosecco, Soda', desc_fr: 'aperol, prosecco, soda', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'cocktails', category: 'Aperitivi / Long drink', name: 'Campari Orange', price: '€ 8,00', desc_it: 'campari, succo d\'arancia', desc_en: 'campari, orange juice', desc_es: 'campari, zumo de naranja', desc_de: 'Campari, Orangensaft', desc_fr: 'campari, jus d\'orange', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'cocktails', category: 'Aperitivi / Long drink', name: 'Gin Tonic Beefeater', price: '€ 8,00', desc_it: 'gin beefeater, acqua tonica', desc_en: 'beefeater gin, tonic water', desc_es: 'ginebra beefeater, agua tónica', desc_de: 'Beefeater Gin, Tonic Water', desc_fr: 'gin beefeater, eau tonique', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'cocktails', category: 'Aperitivi / Long drink', name: 'Rum e Cola', price: '€ 8,00', desc_it: 'rum, cola', desc_en: 'rum, cola', desc_es: 'ron, cola', desc_de: 'Rum, Cola', desc_fr: 'rhum, cola', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'cocktails', category: 'Aperitivi / Long drink', name: 'Vodka Lemon', price: '€ 8,00', desc_it: 'vodka, lemon', desc_en: 'vodka, lemon', desc_es: 'vodka, limón', desc_de: 'Wodka, Lemon', desc_fr: 'vodka, citron', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'cocktails', category: 'Aperitivi / Long drink', name: 'Vodka Orange', price: '€ 8,00', desc_it: 'vodka, succo d\'arancia', desc_en: 'vodka, orange juice', desc_es: 'vodka, zumo de naranja', desc_de: 'Wodka, Orangensaft', desc_fr: 'vodka, jus d\'orange', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'cocktails', category: 'Aperitivi / Long drink', name: 'Vodka Redbull', price: '€ 8,00', desc_it: 'vodka, redbull', desc_en: 'vodka, redbull', desc_es: 'vodka, redbull', desc_de: 'Wodka, Red Bull', desc_fr: 'vodka, redbull', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'cocktails', category: 'Aperitivi / Long drink', name: 'Shot', price: '€ 3,00', desc_it: 'cicchetto', desc_en: 'shot', desc_es: 'chupito', desc_de: 'Shot', desc_fr: 'shooter', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'cocktails', category: 'Aperitivi / Long drink', name: 'Aperitivi analcolici', price: '€ 5,00', desc_it: 'aperitivi analcolici', desc_en: 'analcoholics aperitif', desc_es: 'aperitivo sin alcohol', desc_de: 'alkoholfreier Aperitif', desc_fr: 'apéritif sans alcool', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'cocktails', category: 'Aperitivi / Long drink', name: 'Aperitivi analcolici alla frutta', price: '€ 8,00', desc_it: 'aperitivi analcolici alla frutta', desc_en: 'fruit analcoholic aperitif', desc_es: 'aperitivo de frutas sin alcohol', desc_de: 'alkoholfreier Fruchtaperitif', desc_fr: 'apéritif aux fruits sans alcool', isVegetarian: true, isVegan: true, isGlutenFree: true },
+      // --- GIN TONIC/LEMON ---
+      { tab: 'cocktails', category: 'Gin Tonic / Lemon', name: 'Gin Mare', price: '€ 12,00' },
+      { tab: 'cocktails', category: 'Gin Tonic / Lemon', name: 'Gin Hendrick\'s', price: '€ 11,00' },
+      { tab: 'cocktails', category: 'Gin Tonic / Lemon', name: 'Gin Bombay', price: '€ 9,00' },
+      { tab: 'cocktails', category: 'Gin Tonic / Lemon', name: 'Gin Tanqueray', price: '€ 9,00' },
+      { tab: 'cocktails', category: 'Gin Tonic / Lemon', name: 'Gin Beefeater', price: '€ 8,00' },
 
-      // --- COLAZIONE E TAVOLA CALDA / BREAKFAST & STREET FOOD ---
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Cornetti', price: '€ 1,80', desc_it: 'cornetti', desc_en: 'croissant', desc_es: 'cruasán', desc_de: 'Croissant', desc_fr: 'croissant', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Cornetto al pistacchio', price: '€ 2,00', desc_it: 'cornetto al pistacchio', desc_en: 'pistachio croissants', desc_es: 'cruasán de pistacho', desc_de: 'Pistazien-Croissant', desc_fr: 'croissant à la pistache', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Muffin', price: '€ 3,00', desc_it: 'muffin', desc_en: 'muffin', desc_es: 'magdalena', desc_de: 'Muffin', desc_fr: 'muffin', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Brioches', price: '€ 1,50', desc_it: 'brioches', desc_en: 'brioches', desc_es: 'bollo brioche', desc_de: 'Brioche', desc_fr: 'brioche', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Occhi di bue', price: '€ 3,00', desc_it: 'biscotto con cioccolato, marmellata o pistacchio', desc_en: 'biscuit with choccolate, jam or pistachio', desc_es: 'galleta con chocolate, mermelada o pistacho', desc_de: 'Keks mit Schokolade, Marmelade oder Pistazie', desc_fr: 'biscuit au chocolat, confiture ou pistache', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Crostata', price: '€ 3,50', desc_it: 'crostata', desc_en: 'tart', desc_es: 'tarta', desc_de: 'Tarte', desc_fr: 'tarte', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Zuccotto', price: '€ 3,00', desc_it: 'marmellata di zucca, mandorle tostate', desc_en: 'pumpkin jam, toasted almonds', desc_es: 'mermelada de calabaza, almendras tostadas', desc_de: 'Kürbismarmelade, geröstete Mandeln', desc_fr: 'confiture de citrouille, amandes grillées', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Cassatella', price: '€ 3,00', desc_it: 'cassatella', desc_en: 'cassatella pastry', desc_es: 'pastel cassatella', desc_de: 'Cassatella-Gebäck', desc_fr: 'pâtisserie cassatella', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Torta monoporzione', price: '€ 3,50', desc_it: 'torta monoporzione', desc_en: 'slice cake', desc_es: 'porción de pastel', desc_de: 'Kuchenstück', desc_fr: 'part de gâteau', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Uova all\'occhio di bue 2 pz.', price: '€ 6,50', desc_it: 'uova fritte 2pz', desc_en: 'fried eggs 2pc.', desc_es: '2 huevos fritos', desc_de: '2 Spiegeleier', desc_fr: '2 œufs au plat', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Omelette semplice', price: '€ 6,50', desc_it: 'omelette semplice', desc_en: 'plain omelette', desc_es: 'tortilla francesa', desc_de: 'einfaches Omelett', desc_fr: 'omelette nature', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Colazione / Breakfast', name: 'Omelette farcita', price: '€ 7,50', desc_it: 'omelette farcita', desc_en: 'stuffed omelette', desc_es: 'tortilla rellena', desc_de: 'gefülltes Omelett', desc_fr: 'omelette garnie', isVegetarian: false, isVegan: false, isGlutenFree: true },
-      { tab: 'bar', category: 'Tavola Calda / Street Food', name: 'Tavola Calda', price: '€ 3,00', desc_it: 'pezzo di tavola calda', desc_en: 'street food piece', desc_es: 'comida rápida siciliana', desc_de: 'sizilianisches Street Food', desc_fr: 'pièce de street food', isVegetarian: false, isVegan: false, isGlutenFree: false },
-      { tab: 'bar', category: 'Tavola Calda / Street Food', name: 'Arancini', price: '€ 3,00', desc_it: 'arancini', desc_en: 'arancini', desc_es: 'arancini', desc_de: 'Arancini', desc_fr: 'arancini', isVegetarian: false, isVegan: false, isGlutenFree: false },
-      { tab: 'bar', category: 'Tavola Calda / Street Food', name: 'Toast prosciutto cotto, sottiletta', price: '€ 3,00', desc_it: 'prosciutto cotto, formaggio', desc_en: 'ham, cheese', desc_es: 'jamón, queso', desc_de: 'Schinken, Käse', desc_fr: 'jambon, fromage', isVegetarian: false, isVegan: false, isGlutenFree: false },
+      // --- VODKA & RUM MIXERS ---
+      { tab: 'cocktails', category: 'Vodka', name: 'Vodka Tonic / Lemon', price: '€ 8,00' },
+      { tab: 'cocktails', category: 'Vodka', name: 'Vodka Orange', price: '€ 8,00' },
+      { tab: 'cocktails', category: 'Vodka', name: 'Vodka RedBull', price: '€ 8,00' },
+      { tab: 'cocktails', category: 'Rum e Cola', name: 'Rum e Cola', price: '€ 8,00' },
 
-      // --- GELATERIA / ICE CREAM ---
-      { tab: 'desserts', category: 'Gelateria / Ice cream', name: 'Granita', price: '€ 3,50', desc_it: 'granita siciliana', desc_en: 'sicilian granita', desc_es: 'granizado siciliano', desc_de: 'sizilianische Granita', desc_fr: 'granité sicilien', isVegetarian: true, isVegan: true, isGlutenFree: true },
-      { tab: 'desserts', category: 'Gelateria / Ice cream', name: 'Brioche con gelato', price: '€ 6,00', desc_it: 'brioche con gelato', desc_en: 'brioche with ice-cream', desc_es: 'brioche con helado', desc_de: 'Brioche mit Eis', desc_fr: 'brioche avec glace', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'desserts', category: 'Gelateria / Ice cream', name: 'Cono gelato', price: '€ 3,50', desc_it: 'cono gelato', desc_en: 'ice-cream cone', desc_es: 'cucurucho de helado', desc_de: 'Eiswaffel', desc_fr: 'cône de glace', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'desserts', category: 'Gelateria / Ice cream', name: 'Coppetta piccola', price: '€ 3,00', desc_it: 'coppetta piccola', desc_en: 'small ice-cream cup', desc_es: 'tarrina de helado pequeña', desc_de: 'kleiner Eisbecher', desc_fr: 'petit pot de glace', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'desserts', category: 'Gelateria / Ice cream', name: 'Coppetta media', price: '€ 4,00', desc_it: 'coppetta media', desc_en: 'medium ice-cream cup', desc_es: 'tarrina de helado mediana', desc_de: 'mittlerer Eisbecher', desc_fr: 'pot de glace moyen', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'desserts', category: 'Gelateria / Ice cream', name: 'Coppetta grande', price: '€ 5,00', desc_it: 'coppetta grande', desc_en: 'big ice-cream cup', desc_es: 'tarrina de helado grande', desc_de: 'großer Eisbecher', desc_fr: 'grand pot de glace', isVegetarian: true, isVegan: false, isGlutenFree: true },
-      { tab: 'desserts', category: 'Gelateria / Ice cream', name: 'Cannolo siciliano*', price: '€ 3,00', desc_it: 'cannolo siciliano', desc_en: 'sicilian pastry roll filled with ricotta cheese', desc_es: 'dulce siciliano relleno de queso ricotta', desc_de: 'sizilianisches Gebäck mit Ricotta-Käse', desc_fr: 'pâtisserie sicilienne à la ricotta', isVegetarian: true, isVegan: false, isGlutenFree: false },
-      { tab: 'desserts', category: 'Gelateria / Ice cream', name: 'Coppa Golosa', price: '€ 7,00', desc_it: 'espresso freddo, gelato alla vaniglia, panna montata', desc_en: 'iced espresso, vanilla ice cream, cream', desc_es: 'espresso helado, helado de vainilla, crema batida', desc_de: 'Eis-Espresso, Vanilleeis, Sahne', desc_fr: 'espresso glacé, glace vanille, crème fouettée', isVegetarian: true, isVegan: false, isGlutenFree: true }
+      // ==========================================
+      // DISTILLATI (SPIRITS)
+      // ==========================================
+      { tab: 'cocktails', category: 'Distillati - Gin', name: 'Gin Mare', price: '€ 10,00' },
+      { tab: 'cocktails', category: 'Distillati - Gin', name: 'Gin Hendrick\'s', price: '€ 9,00' },
+      { tab: 'cocktails', category: 'Distillati - Gin', name: 'Gin Bombay Sapphire', price: '€ 7,00' },
+      { tab: 'cocktails', category: 'Distillati - Gin', name: 'Gin Tanqueray', price: '€ 7,00' },
+      { tab: 'cocktails', category: 'Distillati - Gin', name: 'Gin Beefeater', price: '€ 6,00' },
+
+      { tab: 'cocktails', category: 'Distillati - Vodka', name: 'Absolut', price: '€ 8,00' },
+      { tab: 'cocktails', category: 'Distillati - Vodka', name: 'Moskovskaya', price: '€ 7,00' },
+      { tab: 'cocktails', category: 'Distillati - Vodka', name: 'Belvedere', price: '€ 9,00' },
+
+      { tab: 'cocktails', category: 'Distillati - Tequila', name: 'Sauza Blanca', price: '€ 6,00' },
+      { tab: 'cocktails', category: 'Distillati - Tequila', name: 'Josè Cuervo', price: '€ 7,00' },
+
+      { tab: 'cocktails', category: 'Distillati - Rum', name: 'Bacardi', price: '€ 7,00' },
+      { tab: 'cocktails', category: 'Distillati - Rum', name: 'Pampero bianco', price: '€ 7,00' },
+      { tab: 'cocktails', category: 'Distillati - Rum', name: 'Pampero scuro', price: '€ 7,00' },
+      { tab: 'cocktails', category: 'Distillati - Rum', name: 'Brugal', price: '€ 7,00' },
+      { tab: 'cocktails', category: 'Distillati - Rum', name: 'Havana 7', price: '€ 8,00' },
+      { tab: 'cocktails', category: 'Distillati - Rum', name: 'Capitan Morgan', price: '€ 7,00' },
+
+      { tab: 'cocktails', category: 'Distillati - Cachaca', name: 'Cachaca', price: '€ 6,00' },
+
+      { tab: 'cocktails', category: 'Distillati - Whisky', name: 'Jack Daniel\'s (Bourbon)', price: '€ 8,00' },
+      { tab: 'cocktails', category: 'Distillati - Whisky', name: 'Canadian Club (Canadian)', price: '€ 6,00' },
+      { tab: 'cocktails', category: 'Distillati - Whisky', name: 'Jameson (Irish)', price: '€ 6,00' },
+      { tab: 'cocktails', category: 'Distillati - Whisky', name: 'Bushmills (Irish)', price: '€ 6,00' },
+      { tab: 'cocktails', category: 'Distillati - Whisky', name: 'J&B (Scotch)', price: '€ 6,00' },
+      { tab: 'cocktails', category: 'Distillati - Whisky', name: 'Johnny Walker (Scotch)', price: '€ 6,00' },
+      { tab: 'cocktails', category: 'Distillati - Whisky', name: 'Chivas (Scotch)', price: '€ 6,00' },
+      { tab: 'cocktails', category: 'Distillati - Whisky', name: 'Glen Grant (Single malt)', price: '€ 6,00' },
+      { tab: 'cocktails', category: 'Distillati - Whisky', name: 'Laphroaig 10 (Single malt)', price: '€ 9,00' },
+      { tab: 'cocktails', category: 'Distillati - Whisky', name: 'Oban 14 (Torbato)', price: '€ 10,00' },
+
+      { tab: 'cocktails', category: 'Distillati - Brandy', name: 'Vecchia Romagna', price: '€ 6,00' },
+
+      { tab: 'cocktails', category: 'Distillati - Cognac', name: 'Courvoisier Vs', price: '€ 8,00' },
+      { tab: 'cocktails', category: 'Distillati - Cognac', name: 'Courvoisier Vsop', price: '€ 11,00' },
+      { tab: 'cocktails', category: 'Distillati - Cognac', name: 'Remy Martin Vsop', price: '€ 12,00' },
+
+      { tab: 'cocktails', category: 'Distillati - Grappa', name: 'Grappa Bianca', price: '€ 5,00' },
+      { tab: 'cocktails', category: 'Distillati - Grappa', name: 'Grappa Barricata', price: '€ 6,00' }
     ];
 
     let createdCount = 0;
 
-    for (let item of finalItems) {
+    for (let item of drinks) {
       item.id = crypto.randomBytes(4).toString('hex');
       item.available = true;
+      // Make sure badges are false for pure spirits so we don't have random vegetarian carrots on Whisky
+      item.isVegetarian = false;
+      item.isVegan = false;
+      item.isGlutenFree = false;
+      
       await new MenuItem(item).save();
       createdCount++;
     }
 
-    res.send(`<h1>✅ Final Import Complete!</h1><p>Created all ${createdCount} exact menu items from the PDF with 5 perfect languages.</p>`);
+    res.send(`<h1>✅ Real Cocktail Menu Imported!</h1><p>Successfully added all ${createdCount} authentic drinks and spirits from the photos.</p>`);
   } catch (err) {
-    console.error(err);
     res.status(500).send(`<h1>❌ Error:</h1><p>${err.message}</p>`);
   }
 });
