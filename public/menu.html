@@ -289,6 +289,7 @@ const i18n = {
   fr: { search: "Rechercher...", bar: "Bar & Café", food: "Pizza & Sandwichs", restaurant: "Restaurant", cocktails: "Cocktails", wine: "Carte des Vins", desserts: "Desserts", sessionExp: "Session Expirée", sessionExpDesc: "Votre accès a expiré. Veuillez scanner à nouveau le code QR sur votre table.", subtitle: "Taormina, Sicile" }
 };
   
+// --- 2. BULLETPROOF LANGUAGE SWITCHER ---
 function setLanguage(lang) {
   const t = i18n[lang] || i18n['en'];
 
@@ -330,8 +331,11 @@ function setLanguage(lang) {
   // 3. INSTANTLY redraw the menu content from cache
   renderMenu();
 
-  // 4. Force the active tab to click itself so it doesn't jump to Bar!
-  if (tabs[activeIndex]) tabs[activeIndex].click();
+  // 4. SMART TAB CLICKING (Never click tabs on Wine/Desserts pages!)
+  const menuType = new URLSearchParams(window.location.search).get('menu');
+  if (menuType !== 'wine' && menuType !== 'desserts') {
+    if (tabs[activeIndex]) tabs[activeIndex].click();
+  }
 }
 
   function getToken() { return new URLSearchParams(window.location.search).get('token'); }
