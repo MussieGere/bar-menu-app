@@ -392,7 +392,6 @@ function renderMenu() {
 
   let tabs = ['bar', 'food', 'restaurant', 'cocktails'];
   
-  // CRITICAL FIX: Figure out EXACTLY which tab button is highlighted right now
   let activeTabName = 'bar';
   const activeBtn = document.querySelector('.tab-btn.active');
   if (activeBtn) {
@@ -422,11 +421,32 @@ function renderMenu() {
 
   tabs.forEach(tab => {
     const section = document.createElement('section');
-    // Force this section to be active if it matches the highlighted button
     section.className = `menu-section ${tab === activeTabName ? 'active' : ''}`;
     section.id = `section-${tab}`;
 
-    const tabItems = globalMenuData.filter(i => i.tab === tab && i.available);
+    // DEFAULT: Just pull items for this specific tab
+    let tabItems = globalMenuData.filter(i => i.tab === tab && i.available);
+
+    // MAGIC FIX: Desserts Menu gets Sweets ONLY (No Eggs/Omelettes!)
+    if (menuType === 'desserts') {
+      tabItems = globalMenuData.filter(i => {
+        if (!i.available) return false;
+        
+        // 1. Always include standard desserts and ice cream
+        if (i.tab === 'desserts') return true;
+        
+        // 2. If it is from the Breakfast category, filter out the savory stuff!
+        if (i.category && i.category.includes('Colazione')) {
+          const itemName = i.name.toLowerCase();
+          if (itemName.includes('uova') || itemName.includes('omelette')) {
+            return false; // Hide eggs and omelettes
+          }
+          return true; // Keep the pastries, muffins, and cakes
+        }
+        return false;
+      });
+    }
+
     let html = '';
 
     if (tab === 'wine') {
