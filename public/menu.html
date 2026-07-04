@@ -6,21 +6,17 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Ai Paladini | Digital Menu</title>
   
-  <!-- --- OPEN GRAPH META TAGS FOR LINK SHARING --- -->
-  <!-- Essential Meta Tags -->
   <meta property="og:title" content="Ai Paladini - Taormina, Sicily">
   <meta property="og:description" content="Explore our digital menu: artisanal pizzas, sandwiches, signature cocktails, and a curated Sicilian wine list.">
   <meta property="og:image" content="https://bar-menu-app.onrender.com/images/pdf-background.jpg">
   <meta property="og:url" content="https://bar-menu-app.onrender.com">
   <meta property="og:type" content="website">
   
-  <!-- Twitter Card Data (also used by Slack and Discord) -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Ai Paladini - Taormina, Sicily">
   <meta name="twitter:description" content="Explore our digital menu: artisanal pizzas, sandwiches, signature cocktails, and a curated Sicilian wine list.">
   <meta name="twitter:image" content="https://bar-menu-app.onrender.com/images/pdf-background.jpg">
   
-  <!-- Standard Meta Description for Google Search -->
   <meta name="description" content="Digital menu for Ai Paladini Cafe in Taormina, Sicily.">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Montserrat:wght@400;500;600&display=swap');
@@ -51,10 +47,10 @@
 
   .menu-section { 
     display: none; 
-    padding: 20px 24px 60vh; /* 60vh adds a massive invisible cushion at the bottom */
+    padding: 20px 24px 60vh;
     max-width: 740px; 
     margin: 0 auto; 
-    min-height: 100vh; /* Prevents the page from shrinking when items are hidden */
+    min-height: 100vh;
   }
   
   .menu-section.active { 
@@ -72,8 +68,6 @@
 
 /* --- WINE MENU SPECIAL STYLING --- */
   
-/* --- 1. WINE THEME CARD BACKGROUND --- */
-/* Applies the dark red background ONLY to the menu list, keeping the header cream */
 body.wine-theme .wine-section {
   background-image: url('/images/pdf-background.jpg'); 
   background-size: cover;
@@ -85,7 +79,6 @@ body.wine-theme .wine-section {
   box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
 }
   
-  /* --- 2. WINE SECTION MENU STYLES --- */
   .wine-section { min-height: 100vh; }
   .wine-section .menu-section { padding: 10px 24px 80px; }
   
@@ -93,7 +86,7 @@ body.wine-theme .wine-section {
     font-family: 'Cormorant Garamond', serif;
     font-size: 32px;
     font-weight: 600;
-    color: #E3C27C; /* Soft Champagne Gold */
+    color: #E3C27C;
     text-align: center;
     margin: 50px 0 20px;
     text-transform: uppercase;
@@ -146,7 +139,6 @@ body.wine-theme .wine-section {
     font-weight: 700;
   }
 
-  /* BIO Indicator Styling */
   .bio-badge {
     display: inline-flex;
     align-items: center;
@@ -233,8 +225,11 @@ body.wine-theme .wine-section {
     throw new Error("Reloaded");
   }
   
-// --- 1. GLOBAL CACHE & I18N DICTIONARY ---
+// --- GLOBAL CACHE & I18N ---
 let globalMenuData = [];
+let globalTabsData = [];
+let globalCategoriesData = {}; // { tabKey: [...categories] }
+
 const i18n = {
   en: { search: "Search menu...", bar: "Bar & Cafe", food: "Pizza & Sandwiches", restaurant: "Restaurant", cocktails: "Cocktails", wine: "Wine List", desserts: "Desserts", sessionExp: "Session Expired", sessionExpDesc: "Your access has timed out. Please scan the QR code on your table again.", subtitle: "Taormina, Sicily" },
   it: { search: "Cerca nel menù...", bar: "Bar & Caffetteria", food: "Pizza e Panini", restaurant: "Ristorante", cocktails: "Cocktails", wine: "Carta dei Vini", desserts: "Dolci", sessionExp: "Sessione Scaduta", sessionExpDesc: "Il tuo accesso è scaduto. Scansiona nuovamente il QR code al tuo tavolo.", subtitle: "Taormina, Sicilia" },
@@ -242,19 +237,17 @@ const i18n = {
   de: { search: "Menü durchsuchen...", bar: "Bar & Café", food: "Pizza & Sandwiches", restaurant: "Restaurant", cocktails: "Cocktails", wine: "Weinkarte", desserts: "Nachspeisen", sessionExp: "Sitzung Abgelaufen", sessionExpDesc: "Ihr Zugriff ist abgelaufen. Bitte scannen Sie den QR-Code auf Ihrem Tisch erneut.", subtitle: "Taormina, Sizilien" },
   fr: { search: "Rechercher...", bar: "Bar & Café", food: "Pizza & Sandwichs", restaurant: "Restaurant", cocktails: "Cocktails", wine: "Carte des Vins", desserts: "Desserts", sessionExp: "Session Expirée", sessionExpDesc: "Votre accès a expiré. Veuillez scanner à nouveau le code QR sur votre table.", subtitle: "Taormina, Sicile" }
 };
-  
-// --- 2. BULLETPROOF LANGUAGE SWITCHER ---
+
+// --- LANGUAGE SWITCHER (unchanged logic) ---
 function setLanguage(lang) {
   const t = i18n[lang] || i18n['en'];
 
-  // 1. Find out EXACTLY which tab is active BEFORE translating
   let activeIndex = 0;
   const tabs = document.querySelectorAll('.tab-btn');
   tabs.forEach((btn, index) => {
     if (btn.classList.contains('active')) activeIndex = index;
   });
 
-  // 2. Translate the top UI tabs
   tabs.forEach(btn => {
     const text = btn.innerText.toUpperCase();
     if (text.includes('BAR') || text.includes('CAFE') || text.includes('CAFFÈ')) btn.innerText = t.bar;
@@ -282,10 +275,8 @@ function setLanguage(lang) {
     expGate.querySelector('p').innerText = t.sessionExpDesc;
   }
 
-  // 3. INSTANTLY redraw the menu content from cache
   renderMenu();
 
-  // 4. SMART TAB CLICKING (Never click tabs on Wine/Desserts pages!)
   const menuType = new URLSearchParams(window.location.search).get('menu');
   if (menuType !== 'wine' && menuType !== 'desserts') {
     if (tabs[activeIndex]) tabs[activeIndex].click();
@@ -312,11 +303,10 @@ function setLanguage(lang) {
 
     sessionExpiry = data.expiry;
     document.getElementById('nav-container').style.display = 'flex';
-    document.getElementById('search-wrapper').style.display = 'block'; // NEW: Show Search Bar
+    document.getElementById('search-wrapper').style.display = 'block';
     
-    // Auto-detect browser language
     const userLang = navigator.language || navigator.userLanguage;
-    const langCode = userLang.split('-')[0]; // gets 'en', 'it', 'de', etc.
+    const langCode = userLang.split('-')[0];
     if(i18n[langCode]) {
       document.getElementById('lang-switcher').value = langCode;
       setLanguage(langCode);
@@ -328,13 +318,30 @@ function setLanguage(lang) {
     startTimer();
   }
   
-// --- 3. FETCH ONCE FROM SERVER ---
+// --- FETCH MENU & CATEGORIES ---
 async function fetchMenu() {
-  const res = await fetch('/api/menu');
-  globalMenuData = await res.json();
-  renderMenu();
+  try {
+    // Fetch menu items
+    const menuRes = await fetch('/api/menu');
+    globalMenuData = await menuRes.json();
+
+    // Fetch tabs
+    const tabsRes = await fetch('/api/tabs');
+    globalTabsData = await tabsRes.json();
+
+    // Fetch categories for each tab
+    for (const tab of globalTabsData) {
+      const catRes = await fetch(`/api/categories/${tab.key}`);
+      globalCategoriesData[tab.key] = await catRes.json();
+    }
+
+    renderMenu();
+  } catch (err) {
+    console.error('Error fetching menu:', err);
+  }
 }
-// --- 4. INSTANT REDRAW FUNCTION ---
+
+// --- RENDER MENU WITH SORTING ---
 function renderMenu() {
   const urlParams = new URLSearchParams(window.location.search);
   const menuType = urlParams.get('menu');
@@ -377,10 +384,11 @@ function renderMenu() {
     section.className = `menu-section ${tab === activeTabName ? 'active' : ''}`;
     section.id = `section-${tab}`;
 
-    // DEFAULT: Just pull items for this specific tab
+    // DEFAULT: Pull items for this tab, filter by availability
     let tabItems = globalMenuData.filter(i => i.tab === tab && i.available);
 
-    // MAGIC FIX: Desserts Menu gets Sweets ONLY (No Eggs/Omelettes!)
+    // CRITICAL: Desserts menu special filtering
+    // Keeps Colazione items but excludes eggs/omelettes from breakfast
     if (menuType === 'desserts') {
       tabItems = globalMenuData.filter(i => {
         if (!i.available) return false;
@@ -397,15 +405,41 @@ function renderMenu() {
     let html = '';
 
     if (tab === 'wine') {
+      // --- WINE MENU RENDERING ---
       const mainCats = [...new Set(tabItems.map(i => i.category.split(' - ')[0]))];
+      
+      // Sort main categories by Category.sortOrder from database
+      mainCats.sort((a, b) => {
+        const catA = globalCategoriesData['wine']?.find(c => c.name.split(' - ')[0] === a);
+        const catB = globalCategoriesData['wine']?.find(c => c.name.split(' - ')[0] === b);
+        const orderA = catA ? catA.sortOrder : 999;
+        const orderB = catB ? catB.sortOrder : 999;
+        return orderA - orderB;
+      });
+
       mainCats.forEach(mainCat => {
         html += `<div class="wine-main-title">${mainCat}</div>`;
         const subCats = [...new Set(tabItems.filter(i => i.category.startsWith(mainCat)).map(i => i.category.split(' - ')[1] || ''))];
+        
+        subCats.sort((a, b) => {
+          const targetA = a ? `${mainCat} - ${a}` : mainCat;
+          const targetB = b ? `${mainCat} - ${b}` : mainCat;
+          const catA = globalCategoriesData['wine']?.find(c => c.name === targetA);
+          const catB = globalCategoriesData['wine']?.find(c => c.name === targetB);
+          const orderA = catA ? catA.sortOrder : 999;
+          const orderB = catB ? catB.sortOrder : 999;
+          return orderA - orderB;
+        });
+
         subCats.forEach(subCat => {
           if (subCat) html += `<div class="wine-sub-title">${subCat}</div>`;
           const targetCategory = subCat ? `${mainCat} - ${subCat}` : mainCat;
 
-          tabItems.filter(i => i.category === targetCategory).forEach(item => {
+          // Sort items within this category by sortOrder
+          const catItems = tabItems.filter(i => i.category === targetCategory);
+          catItems.sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999));
+
+          catItems.forEach(item => {
             let selectedDesc = item.desc_en || item.desc_it || item.desc || '';
             if (currentLang === 'it' && item.desc_it) selectedDesc = item.desc_it;
             if (currentLang === 'es' && item.desc_es) selectedDesc = item.desc_es;
@@ -434,9 +468,19 @@ function renderMenu() {
         });
       });
     } else {
+      // --- REGULAR MENU RENDERING ---
       let categories = [...new Set(tabItems.map(i => i.category))];
       
-      // --- NEW: Custom Category Sorting for Desserts ---
+      // Sort categories by their sortOrder from the Category database
+      categories.sort((a, b) => {
+        const catA = globalCategoriesData[tab]?.find(c => c.name === a);
+        const catB = globalCategoriesData[tab]?.find(c => c.name === b);
+        const orderA = catA ? catA.sortOrder : 999;
+        const orderB = catB ? catB.sortOrder : 999;
+        return orderA - orderB;
+      });
+
+      // Special handling for Desserts menu: custom category order
       if (menuType === 'desserts') {
         const order = ['Gelateria / Ice cream', 'Dolci / Desserts', 'Colazione / Breakfast'];
         categories.sort((a, b) => {
@@ -447,7 +491,6 @@ function renderMenu() {
       }
 
       categories.forEach(cat => {
-        // --- NEW: Rename Breakfast to Pastries on the Desserts view ---
         let displayCat = cat;
         if (menuType === 'desserts' && cat === 'Colazione / Breakfast') {
           displayCat = 'Pasticceria / Pastries'; 
@@ -455,7 +498,11 @@ function renderMenu() {
 
         html += `<div class="category-title">${displayCat}</div>`;
         
-        tabItems.filter(i => i.category === cat).forEach(item => {
+        // Sort items within category by their sortOrder field
+        const catItems = tabItems.filter(i => i.category === cat);
+        catItems.sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999));
+
+        catItems.forEach(item => {
           let selectedDesc = item.desc_en || item.desc_it || item.desc || '';
           if (currentLang === 'it' && item.desc_it) selectedDesc = item.desc_it;
           if (currentLang === 'es' && item.desc_es) selectedDesc = item.desc_es;
@@ -487,30 +534,27 @@ function renderMenu() {
   });
 }
 
-  // --- REAL-TIME SEARCH FILTER ---
+  // --- SEARCH FILTER (unchanged) ---
   function filterMenu() {
     const query = document.getElementById('menu-search').value.toLowerCase();
     const items = document.querySelectorAll('.menu-item');
     const titles = document.querySelectorAll('.category-title, .wine-main-title, .wine-sub-title');
     
-    // 1. Hide/Show items based on search text
     items.forEach(item => {
       const text = item.innerText.toLowerCase();
       if (text.includes(query)) {
-        item.style.display = ''; // Reverts to CSS default
+        item.style.display = '';
       } else {
-        item.style.display = 'none'; // Hides the item
+        item.style.display = 'none';
       }
     });
 
-    // 2. Hide category titles if the user is typing, so the screen stays clean
     titles.forEach(title => {
       title.style.display = query.length > 0 ? 'none' : '';
     });
   }
   
   function showTab(name, btn) {
-    // Clear search when switching tabs
     document.getElementById('menu-search').value = '';
     filterMenu();
     document.querySelectorAll('.menu-section').forEach(s => s.classList.remove('active'));
@@ -539,13 +583,12 @@ function renderMenu() {
 
   document.addEventListener('contextmenu', e => e.preventDefault());
 
-  // Silently track what customers are tapping on
   function trackClick(id) {
     fetch('/api/menu/track', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id })
-    }).catch(err => console.log('Tracking ignored')); // Fails silently if offline
+    }).catch(err => console.log('Tracking ignored'));
   }
 
   initSession();
