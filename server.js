@@ -51,11 +51,11 @@ const menuItemSchema = new mongoose.Schema({
 }, { strict: false });
 const MenuItem = mongoose.model('MenuItem', menuItemSchema);
 
-// 2. TAB SCHEMA (for managing the 6 main tabs)
+// 2. TAB SCHEMA (for managing the main tabs)
 const tabSchema = new mongoose.Schema({
   key: { type: String, unique: true }, // 'bar', 'food', 'restaurant', 'cocktails', 'wine', 'desserts'
   label: String, // Display name: 'Bar & Caffetteria', 'Pizza & Sandwiches', etc.
-  protected: { type: Boolean, default: true }, // Can't delete the 6 built-in tabs
+  protected: { type: Boolean, default: true }, // Can't delete the built-in tabs
   sortOrder: { type: Number, default: 999 }
 });
 const Tab = mongoose.model('Tab', tabSchema);
@@ -289,7 +289,11 @@ app.get('/scan', (req, res) => {
 
 // --- DATABASE API ENDPOINTS ---
 
-// --- NEW: GET ALL TABS (for admin UI category dropdowns) ---
+// ============================================
+// TABS ENDPOINTS (Create, Read, Update, Delete, Reorder)
+// ============================================
+
+// GET ALL TABS
 app.get('/api/tabs', async (req, res) => {
   try {
     const tabs = await Tab.find().sort({ sortOrder: 1 });
@@ -299,27 +303,97 @@ app.get('/api/tabs', async (req, res) => {
   }
 });
 
-// --- NEW: GET CATEGORIES FOR A SPECIFIC TAB ---
-app.get('/api/categories/:tabKey', async (req, res) => {
+// CREATE NEW TAB
+app.post('/api/tabs/create', requireApiAdmin, async (req, res) => {
   try {
-    const { tabKey } = req.params;
-    const categories = await Category.find({ tabKey }).sort({ sortOrder: 1 });
-    res.json(categories);
+    const { key, label } = req.body;
+    
+    if (!key || !label) {
+      return res.status(400).json({ success: false, message: 'Key and label are required' });
+    }
+
+    // Check if key already exists
+    const existing = await Tab.findOne({ key });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'A tab with this key already exists' });
+    }
+
+    // Get the highest sortOrder and add to it
+    const maxTab = await Tab.findOne().sort({ sortOrder: -1 });
+    const newSortOrder = maxTab ? maxTab.sortOrder + 1 : 1;
+
+    const newTab = new Tab({ key, label, protected: false, sortOrder: newSortOrder });
+    await newTab.save();
+
+    res.json({ success: true, tab: newTab });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch categories' });
+    console.error('Error creating tab:', err);
+    res.status(500).json({ success: false, message: 'Failed to create tab' });
   }
 });
 
-// --- NEW: UPDATE TAB SORT ORDER ---
+// UPDATE TAB LABEL
+app.post('/api/tabs/update', requireApiAdmin, async (req, res) => {
+  try {
+    const { key, newLabel } = req.body;
+    
+    const tab = await Tab.findOne({ key });
+    if (!tab) {
+      return res.status(404).json({ success: false, message: 'Tab not found' });
+    }
+
+    tab.label = newLabel;
+    await tab.save();
+
+    res.json({ success: true, tab });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update tab' });
+  }
+});
+
+// DELETE TAB
+app.post('/api/tabs/delete', requireApiAdmin, async (req, res) => {
+  try {
+    const { key } = req.body;
+    
+    const tab = await Tab.findOne({ key });
+    if (!tab) {
+      return res.status(404).json({ success: false, message: 'Tab not found' });
+    }
+
+    if (tab.protected) {
+      return res.status(403).json({ success: false, message: 'Cannot delete protected tabs' });
+    }
+
+    // Before deleting, move all items in this tab back to another tab
+    // Find another tab to move items to
+    const otherTab = await Tab.findOne({ key: { $ne: key } });
+    if (otherTab) {
+      await MenuItem.updateMany({ tab: key }, { tab: otherTab.key });
+    }
+
+    // Delete all categories for this tab
+    await Category.deleteMany({ tabKey: key });
+
+    // Delete the tab
+    await Tab.deleteOne({ key });
+
+    res.json({ success: true, message: 'Tab deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting tab:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete tab' });
+  }
+});
+
+// REORDER TABS (up/down)
 app.post('/api/tabs/reorder', requireApiAdmin, async (req, res) => {
   try {
-    const { tabKey, direction } = req.body; // direction: 'up' or 'down'
+    const { key, direction } = req.body;
     
-    const tab = await Tab.findOne({ key: tabKey });
+    const tab = await Tab.findOne({ key });
     if (!tab) return res.status(404).json({ success: false });
 
     if (direction === 'up') {
-      // Swap with the tab above (lower sortOrder)
       const swapTab = await Tab.findOne({ sortOrder: { $lt: tab.sortOrder } }).sort({ sortOrder: -1 });
       if (swapTab) {
         const tempSort = tab.sortOrder;
@@ -328,7 +402,6 @@ app.post('/api/tabs/reorder', requireApiAdmin, async (req, res) => {
         await Promise.all([tab.save(), swapTab.save()]);
       }
     } else if (direction === 'down') {
-      // Swap with the tab below (higher sortOrder)
       const swapTab = await Tab.findOne({ sortOrder: { $gt: tab.sortOrder } }).sort({ sortOrder: 1 });
       if (swapTab) {
         const tempSort = tab.sortOrder;
@@ -344,7 +417,126 @@ app.post('/api/tabs/reorder', requireApiAdmin, async (req, res) => {
   }
 });
 
-// --- NEW: UPDATE CATEGORY SORT ORDER ---
+// ============================================
+// CATEGORIES ENDPOINTS (Create, Read, Update, Delete, Reorder)
+// ============================================
+
+// GET CATEGORIES FOR A SPECIFIC TAB
+app.get('/api/categories/:tabKey', async (req, res) => {
+  try {
+    const { tabKey } = req.params;
+    const categories = await Category.find({ tabKey }).sort({ sortOrder: 1 });
+    res.json(categories);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+// CREATE NEW CATEGORY
+app.post('/api/categories/create', requireApiAdmin, async (req, res) => {
+  try {
+    const { tabKey, name } = req.body;
+    
+    if (!tabKey || !name) {
+      return res.status(400).json({ success: false, message: 'Tab key and category name are required' });
+    }
+
+    // Verify tab exists
+    const tab = await Tab.findOne({ key: tabKey });
+    if (!tab) {
+      return res.status(404).json({ success: false, message: 'Tab not found' });
+    }
+
+    // Check if category already exists in this tab
+    const existing = await Category.findOne({ tabKey, name });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'This category already exists in this tab' });
+    }
+
+    // Get highest sortOrder for this tab
+    const maxCat = await Category.findOne({ tabKey }).sort({ sortOrder: -1 });
+    const newSortOrder = maxCat ? maxCat.sortOrder + 1 : 1;
+
+    const newCategory = new Category({ tabKey, name, sortOrder: newSortOrder });
+    await newCategory.save();
+
+    res.json({ success: true, category: newCategory });
+  } catch (err) {
+    console.error('Error creating category:', err);
+    res.status(500).json({ success: false, message: 'Failed to create category' });
+  }
+});
+
+// UPDATE CATEGORY NAME
+app.post('/api/categories/update', requireApiAdmin, async (req, res) => {
+  try {
+    const { categoryId, newName } = req.body;
+    
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ success: false, message: 'Category not found' });
+    }
+
+    const oldName = category.name;
+    category.name = newName;
+    await category.save();
+
+    // Update all menu items with the old category name
+    await MenuItem.updateMany(
+      { tab: category.tabKey, category: oldName },
+      { category: newName }
+    );
+
+    res.json({ success: true, category });
+  } catch (err) {
+    console.error('Error updating category:', err);
+    res.status(500).json({ success: false, message: 'Failed to update category' });
+  }
+});
+
+// DELETE CATEGORY
+app.post('/api/categories/delete', requireApiAdmin, async (req, res) => {
+  try {
+    const { categoryId } = req.body;
+    
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ success: false, message: 'Category not found' });
+    }
+
+    // Before deleting, move all items in this category to another category in the same tab
+    const itemsInCategory = await MenuItem.find({ tab: category.tabKey, category: category.name });
+    
+    if (itemsInCategory.length > 0) {
+      // Find another category in the same tab
+      const otherCategory = await Category.findOne({ 
+        tabKey: category.tabKey,
+        _id: { $ne: categoryId }
+      });
+
+      if (otherCategory) {
+        // Move items to the other category
+        await MenuItem.updateMany(
+          { tab: category.tabKey, category: category.name },
+          { category: otherCategory.name }
+        );
+      } else {
+        // No other category exists, so delete the items too
+        await MenuItem.deleteMany({ tab: category.tabKey, category: category.name });
+      }
+    }
+
+    // Delete the category
+    await Category.findByIdAndDelete(categoryId);
+
+    res.json({ success: true, message: 'Category deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting category:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete category' });
+  }
+});
+
+// REORDER CATEGORIES (up/down)
 app.post('/api/categories/reorder', requireApiAdmin, async (req, res) => {
   try {
     const { categoryId, direction } = req.body;
@@ -384,7 +576,171 @@ app.post('/api/categories/reorder', requireApiAdmin, async (req, res) => {
   }
 });
 
-// --- NEW: REORDER ITEMS WITHIN CATEGORY ---
+// ============================================
+// MENU ITEMS ENDPOINTS (existing + reorder)
+// ============================================
+
+// GET ALL MENU ITEMS
+app.get('/api/menu', async (req, res) => {
+  try {
+    const menu = await MenuItem.find({});
+    res.json(menu);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch menu' });
+  }
+});
+
+// TOGGLE ITEM AVAILABILITY
+app.post('/api/menu/toggle', requireApiAdmin, async (req, res) => {
+  try {
+    const { id } = req.body;
+    const item = await MenuItem.findOne({ id });
+    if (item) {
+      item.available = !item.available;
+      await item.save();
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// ADD NEW MENU ITEM
+app.post('/api/menu/add', requireApiAdmin, async (req, res) => {
+  try {
+    const { tab, category, name, price, desc_it, desc_en, image, available, isVegetarian, isVegan, isGlutenFree } = req.body;
+    
+    const newId = require('crypto').randomBytes(4).toString('hex');
+    
+    // Get the highest sortOrder in this category to add new item at the end
+    const lastItem = await MenuItem.findOne({ tab, category }).sort({ sortOrder: -1 });
+    const newSortOrder = lastItem ? lastItem.sortOrder + 1 : 1;
+    
+    const newItem = new MenuItem({
+      id: newId,
+      tab,
+      category,
+      name,
+      price,
+      desc_it,
+      desc_en,
+      image,
+      available,
+      isVegetarian,
+      isVegan,
+      isGlutenFree,
+      clicks: 0,
+      sortOrder: newSortOrder
+    });
+
+    await newItem.save();
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error adding item:", err);
+    res.status(500).json({ success: false, message: 'Failed to add item' });
+  }
+});
+
+// CLOUDINARY CONFIGURATION
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET
+});
+
+// UPLOAD IMAGE TO CLOUDINARY
+app.post('/api/menu/upload-image', requireApiAdmin, upload.single('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+  
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'ai-paladini-menu'
+    });
+    
+    fs.unlinkSync(req.file.path);
+    
+    res.json({ success: true, imagePath: result.secure_url });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Cloud upload failed' });
+  }
+});
+
+// UPDATE IMAGE
+app.post('/api/menu/update-image', requireApiAdmin, async (req, res) => {
+  try {
+    const { id, imagePath } = req.body;
+    await MenuItem.findOneAndUpdate({ id }, { image: imagePath });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// UPDATE PRICE & DIETARY INFO
+app.post('/api/menu/update-price', requireApiAdmin, async (req, res) => {
+  try {
+    const { id, price, image, isVegetarian, isVegan, isGlutenFree } = req.body;
+
+    const updateData = {
+      price: price,
+      isVegetarian: isVegetarian,
+      isVegan: isVegan,
+      isGlutenFree: isGlutenFree
+    };
+
+    if (image) {
+      updateData.image = image;
+    }
+
+    await MenuItem.findOneAndUpdate({ id: id }, { $set: updateData });
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to update item' });
+  }
+});
+
+// UPDATE CATEGORY
+app.post('/api/menu/update-category', requireApiAdmin, async (req, res) => {
+  try {
+    const { id, tab, category } = req.body;
+    await MenuItem.findOneAndUpdate({ id }, { tab, category });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// RESET ANALYTICS
+app.post('/api/menu/reset-analytics', requireApiAdmin, async (req, res) => {
+  try {
+    await MenuItem.updateMany({}, { $set: { clicks: 0 } });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// DELETE ITEM
+app.post('/api/menu/delete', requireApiAdmin, async (req, res) => {
+  try {
+    const { id } = req.body;
+    const result = await MenuItem.deleteOne({ id });
+    if (result.deletedCount > 0) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ success: false, message: 'Item not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// REORDER ITEMS WITHIN CATEGORY
 app.post('/api/menu/reorder-items', requireApiAdmin, async (req, res) => {
   try {
     const { itemId, direction } = req.body;
@@ -426,158 +782,7 @@ app.post('/api/menu/reorder-items', requireApiAdmin, async (req, res) => {
   }
 });
 
-// --- EXISTING MENU ENDPOINTS (all unchanged) ---
-
-app.get('/api/menu', async (req, res) => {
-  try {
-    const menu = await MenuItem.find({});
-    res.json(menu);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch menu' });
-  }
-});
-
-app.post('/api/menu/toggle', requireApiAdmin, async (req, res) => {
-  try {
-    const { id } = req.body;
-    const item = await MenuItem.findOne({ id });
-    if (item) {
-      item.available = !item.available;
-      await item.save();
-    }
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
-app.post('/api/menu/add', requireApiAdmin, async (req, res) => {
-  try {
-    const { tab, category, name, price, desc_it, desc_en, image, available, isVegetarian, isVegan, isGlutenFree } = req.body;
-    
-    const newId = require('crypto').randomBytes(4).toString('hex');
-    
-    // Get the highest sortOrder in this category to add new item at the end
-    const lastItem = await MenuItem.findOne({ tab, category }).sort({ sortOrder: -1 });
-    const newSortOrder = lastItem ? lastItem.sortOrder + 1 : 1;
-    
-    const newItem = new MenuItem({
-      id: newId,
-      tab,
-      category,
-      name,
-      price,
-      desc_it,
-      desc_en,
-      image,
-      available,
-      isVegetarian,
-      isVegan,
-      isGlutenFree,
-      clicks: 0,
-      sortOrder: newSortOrder
-    });
-
-    await newItem.save();
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Error adding item:", err);
-    res.status(500).json({ success: false, message: 'Failed to add item' });
-  }
-});
-
-const cloudinary = require('cloudinary').v2;
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET
-});
-
-app.post('/api/menu/upload-image', requireApiAdmin, upload.single('image'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
-  
-  try {
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'ai-paladini-menu'
-    });
-    
-    fs.unlinkSync(req.file.path);
-    
-    res.json({ success: true, imagePath: result.secure_url });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Cloud upload failed' });
-  }
-});
-
-app.post('/api/menu/update-image', requireApiAdmin, async (req, res) => {
-  try {
-    const { id, imagePath } = req.body;
-    await MenuItem.findOneAndUpdate({ id }, { image: imagePath });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
-app.post('/api/menu/update-price', requireApiAdmin, async (req, res) => {
-  try {
-    const { id, price, image, isVegetarian, isVegan, isGlutenFree } = req.body;
-
-    const updateData = {
-      price: price,
-      isVegetarian: isVegetarian,
-      isVegan: isVegan,
-      isGlutenFree: isGlutenFree
-    };
-
-    if (image) {
-      updateData.image = image;
-    }
-
-    await MenuItem.findOneAndUpdate({ id: id }, { $set: updateData });
-    
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Failed to update item' });
-  }
-});
-
-app.post('/api/menu/update-category', requireApiAdmin, async (req, res) => {
-  try {
-    const { id, tab, category } = req.body;
-    await MenuItem.findOneAndUpdate({ id }, { tab, category });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
-app.post('/api/menu/reset-analytics', requireApiAdmin, async (req, res) => {
-  try {
-    await MenuItem.updateMany({}, { $set: { clicks: 0 } });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
-app.post('/api/menu/delete', requireApiAdmin, async (req, res) => {
-  try {
-    const { id } = req.body;
-    const result = await MenuItem.deleteOne({ id });
-    if (result.deletedCount > 0) {
-      res.json({ success: true });
-    } else {
-      res.status(404).json({ success: false, message: 'Item not found' });
-    }
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
+// TRACK CLICKS
 app.post('/api/menu/track', async (req, res) => {
   try {
     const { id } = req.body;
@@ -588,7 +793,7 @@ app.post('/api/menu/track', async (req, res) => {
   }
 });
 
-// --- ADMIN QR GENERATOR ---
+// --- ADMIN QR GENERATORS ---
 app.get('/api/admin-qr', requireApiAdmin, async (req, res) => {
   const scanUrl = `${req.protocol}://${req.get('host')}/scan?menu=main`;
   const qrDataUrl = await QRCode.toDataURL(scanUrl, { color: { dark: '#0C0A08', light: '#ffffff' } });
