@@ -426,35 +426,6 @@ app.post('/api/menu/reorder-items', requireApiAdmin, async (req, res) => {
   }
 });
 
-// --- NEW: ADD A SUB-CATEGORY ---
-app.post('/api/categories/add', requireApiAdmin, async (req, res) => {
-  try {
-    const { tabKey, name } = req.body;
-    if (!tabKey || !name) return res.status(400).json({ success: false });
-
-    // Find the current highest sort order so the new one goes to the bottom
-    const lastCat = await Category.findOne({ tabKey }).sort({ sortOrder: -1 });
-    const newSortOrder = lastCat ? lastCat.sortOrder + 1 : 1;
-
-    const newCat = new Category({ tabKey, name, sortOrder: newSortOrder });
-    await newCat.save();
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
-// --- NEW: DELETE A SUB-CATEGORY ---
-app.post('/api/categories/delete', requireApiAdmin, async (req, res) => {
-  try {
-    const { categoryId } = req.body;
-    await Category.findByIdAndDelete(categoryId);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
 // --- EXISTING MENU ENDPOINTS (all unchanged) ---
 
 app.get('/api/menu', async (req, res) => {
