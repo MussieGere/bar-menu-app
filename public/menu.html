@@ -198,13 +198,7 @@ body.wine-theme .wine-section {
 </header>
 
 <nav class="nav-tabs" id="nav-container" style="display:none;">
-  <button class="tab-btn active" onclick="showTab('bar', this)">Bar & Caffetteria</button>
-  <button class="tab-btn" onclick="showTab('food', this)">Pizza & Sandwiches</button>
-  <button class="tab-btn" onclick="showTab('restaurant', this)">Ristorante</button>
-  <button class="tab-btn" onclick="showTab('cocktails', this)">Cocktails</button>
-  <button class="tab-btn" onclick="showTab('wine', this)" id="wine-tab" style="display:none;">Wine List</button>
-  <button class="tab-btn" onclick="showTab('desserts', this)" id="desserts-tab" style="display:none;">Desserts</button>
-</nav>
+  </nav>
 
 <div id="search-wrapper" style="display: none; padding: 15px 24px 5px; max-width: 740px; margin: 0 auto;">
   <div style="position: relative;">
@@ -321,19 +315,32 @@ function setLanguage(lang) {
 // --- FETCH MENU & CATEGORIES ---
 async function fetchMenu() {
   try {
-    // Fetch menu items
     const menuRes = await fetch('/api/menu');
     globalMenuData = await menuRes.json();
 
-    // Fetch tabs
     const tabsRes = await fetch('/api/tabs');
     globalTabsData = await tabsRes.json();
 
-    // Fetch categories for each tab
     for (const tab of globalTabsData) {
       const catRes = await fetch(`/api/categories/${tab.key}`);
       globalCategoriesData[tab.key] = await catRes.json();
     }
+
+    // NEW: Dynamically build the navigation buttons based on your Admin sorting!
+    const navContainer = document.getElementById('nav-container');
+    navContainer.innerHTML = ''; 
+    
+    // Sort tabs by database order
+    const sortedTabs = [...globalTabsData].sort((a, b) => a.sortOrder - b.sortOrder);
+    
+    sortedTabs.forEach((tab, index) => {
+      const btn = document.createElement('button');
+      btn.className = `tab-btn ${index === 0 ? 'active' : ''}`; // Make the first one active
+      btn.id = `${tab.key}-tab`;
+      btn.innerText = tab.label.toUpperCase();
+      btn.onclick = function() { showTab(tab.key, this); };
+      navContainer.appendChild(btn);
+    });
 
     renderMenu();
   } catch (err) {
@@ -350,7 +357,8 @@ function renderMenu() {
   if (!container) return;
   container.innerHTML = '';
 
-  let tabs = ['bar', 'food', 'restaurant', 'cocktails'];
+  // NEW: Pull the active tabs directly from the database instead of hardcoding them
+  let tabs = globalTabsData.map(t => t.key).filter(k => k !== 'wine' && k !== 'desserts');
   
   let activeTabName = 'bar';
   const activeBtn = document.querySelector('.tab-btn.active');
