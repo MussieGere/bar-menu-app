@@ -10,11 +10,13 @@
 :root {
   --gold: #8B5A2B; --dark: #F4F1EA; --surface: #FFFFFF; --text: #2C2C2C; --muted: #666666;
 }
-body { background: var(--dark); color: var(--text); font-family: 'Montserrat', sans-serif; padding: 40px 20px; max-width: 800px; margin: 0 auto; }
+body { background: var(--dark); color: var(--text); font-family: 'Montserrat', sans-serif; padding: 40px 20px; max-width: 900px; margin: 0 auto; }
 h1 { font-family: 'Cormorant Garamond', serif; font-size: 40px; text-align: center; color: var(--gold); margin-bottom: 30px; }
+h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold); margin-bottom: 20px; }
+h3 { font-size: 16px; color: var(--text); margin-bottom: 15px; font-weight: 600; }
 
 .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-.tab-btn { flex: 1; padding: 15px; background: transparent; border: 1px solid var(--gold); color: var(--gold); cursor: pointer; font-weight: 600; text-transform: uppercase; font-size: 12px; border-radius: 4px; min-width: 120px; }
+.tab-btn { flex: 1; padding: 15px; background: transparent; border: 1px solid var(--gold); color: var(--gold); cursor: pointer; font-weight: 600; text-transform: uppercase; font-size: 12px; border-radius: 4px; min-width: 100px; }
 .tab-btn.active { background: var(--gold); color: white; }
 
 .panel { display: none; background: var(--surface); padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -34,30 +36,52 @@ h1 { font-family: 'Cormorant Garamond', serif; font-size: 40px; text-align: cent
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
 .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: var(--session-ok, #4CAF82); }
+input:checked + .slider { background-color: #4CAF82; }
 input:checked + .slider:before { transform: translateX(26px); }
 
 /* Form */
 .form-group { margin-bottom: 15px; }
 .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
-.form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
 .btn-submit { width: 100%; padding: 15px; background: var(--gold); color: white; border: none; font-weight: 600; text-transform: uppercase; cursor: pointer; border-radius: 4px; margin-top: 10px; }
+.btn-submit:hover { background: #6d4a1f; }
 
-/* Category/Tab Manager Styles */
-.category-item { 
+/* Tab/Category Item Styling */
+.item-card { 
   display: flex; 
   justify-content: space-between; 
   align-items: center; 
-  padding: 12px; 
+  padding: 15px; 
   margin: 8px 0; 
   background: #f9f9f9; 
   border: 1px solid #eee; 
   border-radius: 4px;
+  border-left: 4px solid var(--gold);
 }
-.category-item-name { font-weight: 600; color: var(--text); flex: 1; }
-.category-controls { display: flex; gap: 5px; }
-.btn-arrow { padding: 6px 10px; background: var(--gold); color: white; border: none; cursor: pointer; border-radius: 3px; font-size: 12px; font-weight: 600; }
-.btn-arrow:hover { background: #6d4a1f; }
+.item-card-name { font-weight: 600; color: var(--text); flex: 1; }
+.item-card-info { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.item-controls { display: flex; gap: 8px; }
+.btn-small { padding: 6px 10px; background: var(--gold); color: white; border: none; cursor: pointer; border-radius: 3px; font-size: 12px; font-weight: 600; }
+.btn-small:hover { background: #6d4a1f; }
+.btn-small.edit { background: #2196F3; }
+.btn-small.edit:hover { background: #1976D2; }
+.btn-small.delete { background: #d32f2f; }
+.btn-small.delete:hover { background: #b71c1c; }
+.btn-small.up { background: #4CAF82; }
+.btn-small.up:hover { background: #388E3C; }
+.btn-small.down { background: #FF9800; }
+.btn-small.down:hover { background: #F57C00; }
+
+/* Form Container */
+.form-container { background: #f5f5f5; padding: 20px; border-radius: 4px; margin-bottom: 20px; }
+.form-inline { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: flex-end; }
+
+/* Section Divider */
+.section-divider { border-top: 2px solid rgba(139,90,43,0.2); margin: 30px 0; padding-top: 20px; }
+
+/* Tab Header */
+.tab-header { background: rgba(139,90,43,0.1); padding: 15px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid var(--gold); }
+.tab-header h3 { margin: 0; color: var(--text); }
 
 </style>
 </head>
@@ -69,69 +93,91 @@ input:checked + .slider:before { transform: translateX(26px); }
 <h1>Staff Dashboard</h1>
 
 <div class="nav-tabs">
-  <button class="tab-btn active" onclick="switchTab('qr')">Table QR Code</button>
-  <button class="tab-btn" onclick="switchTab('qr-wine')">Wine QR Code</button>
-  <button class="tab-btn" onclick="switchTab('qr-desserts')">Desserts QR Code</button>
+  <button class="tab-btn active" onclick="switchTab('qr')">Table QR</button>
+  <button class="tab-btn" onclick="switchTab('qr-wine')">Wine QR</button>
+  <button class="tab-btn" onclick="switchTab('qr-desserts')">Desserts QR</button>
   <button class="tab-btn" onclick="switchTab('manage')">Manage Menu</button>
-  <button class="tab-btn" onclick="switchTab('edit')">Edit Item / Add Image</button>
+  <button class="tab-btn" onclick="switchTab('edit')">Edit Item</button>
   <button class="tab-btn" onclick="switchTab('add')">Add Item</button>
   <button class="tab-btn" onclick="switchTab('analytics'); loadAnalytics();">Analytics</button>
-  <button class="tab-btn" onclick="switchTab('categories'); loadCategoryManager();">Category Order</button>
+  <button class="tab-btn" onclick="switchTab('tabs'); loadTabManager();">Manage Tabs</button>
+  <button class="tab-btn" onclick="switchTab('categories'); loadCategoryManager();">Manage Categories</button>
 </div>
 
+<!-- QR PANELS -->
 <div id="panel-qr" class="panel active qr-box">
-  <h2>The Master Table QR</h2>
-  <p style="font-size: 13px; color: #666;">Print this QR code and place it on your tables. Every time a customer scans it, it automatically creates a fresh 30-minute session for them.</p>
+  <h2>Main Menu QR Code</h2>
+  <p style="font-size: 13px; color: #666;">Print this QR code and place it on your tables.</p>
   <img id="masterQr" src="" width="250">
   <p id="masterUrl" style="font-size: 11px; color: #999; word-break: break-all;"></p>
 </div>
 
 <div id="panel-qr-wine" class="panel qr-box">
   <h2>Wine List QR Code</h2>
-  <p style="font-size: 13px; color: #666;">Customers who scan this QR code will see the wine list and other beverage options.</p>
+  <p style="font-size: 13px; color: #666;">Customers who scan this will see the wine list and beverages.</p>
   <img id="wineQr" src="" width="250">
   <p id="wineUrl" style="font-size: 11px; color: #999; word-break: break-all;"></p>
 </div>
 
 <div id="panel-qr-desserts" class="panel qr-box">
   <h2>Desserts QR Code</h2>
-  <p style="font-size: 13px; color: #666;">Customers who scan this QR code will see the desserts, ice cream, and breakfast menu.</p>
+  <p style="font-size: 13px; color: #666;">Customers who scan this will see desserts and ice cream.</p>
   <img id="dessertsQr" src="" width="250">
   <p id="dessertsUrl" style="font-size: 11px; color: #999; word-break: break-all;"></p>
 </div>
 
+<!-- ANALYTICS PANEL -->
 <div id="panel-analytics" class="panel">
   <h2>Menu Performance Analytics</h2>
-  <p style="font-size: 13px; color: #666; margin-bottom: 20px;">This shows how many times customers have tapped/interacted with each item.</p>
+  <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Shows how many times customers tapped each item.</p>
   <div id="analytics-container"></div>
-
   <button onclick="resetAnalytics()" style="width: 100%; padding: 12px; background: #d32f2f; color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 4px; margin-top: 20px;">
     Reset All Analytics
   </button>
 </div>
 
-<div id="panel-categories" class="panel">
-  <h2>Category & Tab Manager</h2>
-  <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Use the up/down arrows to reorder tabs and categories. This controls how they appear on the customer menu.</p>
+<!-- TABS MANAGER PANEL -->
+<div id="panel-tabs" class="panel">
+  <h2>Manage Main Tabs/Sections</h2>
+  <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Add, edit, reorder, or delete main menu tabs (Bar, Food, Restaurant, etc.)</p>
   
-  <div id="category-manager-container">Loading...</div>
+  <div class="form-container">
+    <h3>Create New Tab</h3>
+    <div class="form-inline">
+      <input type="text" id="new-tab-key" placeholder="Tab Key (e.g., 'specials', 'bar2')" style="grid-column: 1 / 2;">
+      <input type="text" id="new-tab-label" placeholder="Tab Label (e.g., 'House Specials')" style="grid-column: 2 / 3;">
+      <button onclick="createTab()" class="btn-small" style="grid-column: 3 / 4;">Create</button>
+    </div>
+  </div>
+
+  <div id="tabs-container">Loading tabs...</div>
 </div>
 
+<!-- CATEGORIES MANAGER PANEL -->
+<div id="panel-categories" class="panel">
+  <h2>Manage Categories</h2>
+  <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Create, edit, reorder, or delete categories within each tab.</p>
+  
+  <div id="categories-container">Loading categories...</div>
+</div>
+
+<!-- MENU MANAGE PANEL -->
 <div id="panel-manage" class="panel">
   <h2>Current Menu</h2>
   <div class="nav-tabs" id="manage-tabs" style="background: white; border: none; margin-bottom: 20px; padding: 0;">
-    <button class="tab-btn" onclick="switchManageTab('bar', this)" style="border-bottom: 3px solid transparent;">Bar & Caffetteria</button>
-    <button class="tab-btn" onclick="switchManageTab('food', this)" style="border-bottom: 3px solid transparent;">Pizza & Sandwiches</button>
-    <button class="tab-btn" onclick="switchManageTab('restaurant', this)" style="border-bottom: 3px solid transparent;">Ristorante</button>
+    <button class="tab-btn" onclick="switchManageTab('bar', this)" style="border-bottom: 3px solid transparent;">Bar</button>
+    <button class="tab-btn" onclick="switchManageTab('food', this)" style="border-bottom: 3px solid transparent;">Food</button>
+    <button class="tab-btn" onclick="switchManageTab('restaurant', this)" style="border-bottom: 3px solid transparent;">Restaurant</button>
     <button class="tab-btn" onclick="switchManageTab('cocktails', this)" style="border-bottom: 3px solid transparent;">Cocktails</button>
-    <button class="tab-btn" onclick="switchManageTab('wine', this)" style="border-bottom: 3px solid transparent;">Wine List</button>
+    <button class="tab-btn" onclick="switchManageTab('wine', this)" style="border-bottom: 3px solid transparent;">Wine</button>
     <button class="tab-btn" onclick="switchManageTab('desserts', this)" style="border-bottom: 3px solid transparent;">Desserts</button>
   </div>
   <div id="menu-list">Loading...</div>
 </div>
 
+<!-- EDIT ITEM PANEL -->
 <div id="panel-edit" class="panel">
-  <h2>Edit Item / Add Image / Change Price / Delete</h2>
+  <h2>Edit Item / Add Image / Change Price</h2>
   <div id="edit-search" style="margin-bottom: 20px;">
     <input type="text" id="edit-search-input" placeholder="Search for item to edit..." style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
     <div id="edit-search-results" style="margin-top: 10px;"></div>
@@ -162,7 +208,7 @@ input:checked + .slider:before { transform: translateX(26px); }
     </div>
     
     <div class="form-group" style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #ccc;">
-      <label>Move Item to New Section & Category</label>
+      <label>Move Item to Different Section & Category</label>
       <select id="edit-tab" style="margin-bottom: 10px;"></select>
       <select id="edit-cat"></select>
     </div>
@@ -175,18 +221,14 @@ input:checked + .slider:before { transform: translateX(26px); }
   </div>
 </div>
 
+<!-- ADD ITEM PANEL -->
 <div id="panel-add" class="panel">
   <h2>Add New Menu Item</h2>
   <form id="addForm">
     <div class="form-group">
       <label>Section</label>
       <select id="f-tab" required>
-        <option value="bar">Bar & Caffetteria</option>
-        <option value="food">Pizza & Sandwiches</option>
-        <option value="restaurant">Ristorante</option>
-        <option value="cocktails">Cocktails & Spirits</option>
-        <option value="wine">Wine</option>
-        <option value="desserts">Desserts</option>
+        <option value="">-- Select Section --</option>
       </select>
     </div>
     <div class="form-group">
@@ -200,34 +242,22 @@ input:checked + .slider:before { transform: translateX(26px); }
       <input type="text" id="f-name" required>
     </div>
     <div class="form-group">
-      <label>Price (e.g. '8,50' - euro sign added automatically)</label>
+      <label>Price</label>
       <div style="display: flex; align-items: center;">
         <span style="padding: 10px; background: #f5f5f5; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px; font-weight: 600; color: #666;">€</span>
         <input type="text" id="f-price" placeholder="e.g. 8,50" required style="border-radius: 0 4px 4px 0;">
       </div>
     </div>
     <div class="form-group">
-      <label>Description (Italian) - Optional</label>
+      <label>Description (Italian)</label>
       <input type="text" id="f-desc-it">
     </div>
     <div class="form-group">
-      <label>Description (English) - Optional</label>
+      <label>Description (English)</label>
       <input type="text" id="f-desc-en">
     </div>
     <div class="form-group">
-      <label>Description (Spanish) - Optional</label>
-      <input type="text" id="f-desc-es" placeholder="e.g. queso mozzarella, tomate...">
-    </div>
-    <div class="form-group">
-      <label>Description (German) - Optional</label>
-      <input type="text" id="f-desc-de" placeholder="e.g. Mozzarella, Tomate...">
-    </div>
-    <div class="form-group">
-      <label>Description (French) - Optional</label>
-      <input type="text" id="f-desc-fr" placeholder="e.g. mozzarella, tomate...">
-    </div>
-    <div class="form-group">
-      <label>Item Image (Optional - JPG, PNG, WebP up to 5MB)</label>
+      <label>Item Image (Optional)</label>
       <input type="file" id="f-image" accept="image/jpeg,image/png,image/webp">
       <img id="f-image-preview" style="max-width: 150px; margin-top: 10px; border-radius: 4px; display: none;">
     </div>
@@ -239,19 +269,39 @@ input:checked + .slider:before { transform: translateX(26px); }
     <button type="submit" class="btn-submit">Add to Menu</button>
   </form>
 </div>
-  
+
 <script>
   let allTabs = [];
   let allCategories = {};
+  let allMenuItems = [];
 
+  // --- SWITCHING BETWEEN PANELS ---
   function switchTab(tab) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.nav-tabs')[0].querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('panel-' + tab).classList.add('active');
     event.target.classList.add('active');
   }
 
-  // Load All QR Codes
+  // --- LOAD ALL DATA ---
+  async function loadTabsAndCategories() {
+    try {
+      const tabsRes = await fetch('/api/tabs');
+      allTabs = await tabsRes.json();
+
+      for (const tab of allTabs) {
+        const catRes = await fetch(`/api/categories/${tab.key}`);
+        allCategories[tab.key] = await catRes.json();
+      }
+
+      const menuRes = await fetch('/api/menu');
+      allMenuItems = await menuRes.json();
+    } catch (err) {
+      console.error('Error loading data:', err);
+    }
+  }
+
+  // --- LOAD QR CODES ---
   async function loadQr() {
     const [mainRes, wineRes, dessertsRes] = await Promise.all([
       fetch('/api/admin-qr'),
@@ -265,79 +315,412 @@ input:checked + .slider:before { transform: translateX(26px); }
     
     document.getElementById('masterQr').src = mainData.qrDataUrl;
     document.getElementById('masterUrl').innerText = mainData.scanUrl;
-    
     document.getElementById('wineQr').src = wineData.qrDataUrl;
     document.getElementById('wineUrl').innerText = wineData.scanUrl;
-    
     document.getElementById('dessertsQr').src = dessertsData.qrDataUrl;
     document.getElementById('dessertsUrl').innerText = dessertsData.scanUrl;
   }
 
-  // NEW: Load tabs and categories from API
-  async function loadTabsAndCategories() {
-    try {
-      const tabsRes = await fetch('/api/tabs');
-      allTabs = await tabsRes.json();
+  // ============================================
+  // TAB MANAGEMENT
+  // ============================================
 
-      for (const tab of allTabs) {
-        const catRes = await fetch(`/api/categories/${tab.key}`);
-        allCategories[tab.key] = await catRes.json();
+  async function loadTabManager() {
+    const container = document.getElementById('tabs-container');
+    container.innerHTML = '';
+
+    const sortedTabs = [...allTabs].sort((a, b) => a.sortOrder - b.sortOrder);
+
+    sortedTabs.forEach((tab, idx) => {
+      const itemCount = allMenuItems.filter(item => item.tab === tab.key).length;
+      
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.innerHTML = `
+        <div>
+          <div class="item-card-name">${tab.label}</div>
+          <div class="item-card-info">Key: ${tab.key} | ${itemCount} items | ${tab.protected ? '🔒 Protected' : '🔓 Can delete'}</div>
+        </div>
+        <div class="item-controls">
+          <button class="btn-small up" onclick="reorderTab('${tab.key}', 'up')" ${idx === 0 ? 'disabled' : ''}>↑</button>
+          <button class="btn-small down" onclick="reorderTab('${tab.key}', 'down')" ${idx === sortedTabs.length - 1 ? 'disabled' : ''}>↓</button>
+          <button class="btn-small edit" onclick="editTabModal('${tab.key}', '${tab.label}')">✎ Edit</button>
+          ${!tab.protected ? `<button class="btn-small delete" onclick="deleteTabConfirm('${tab.key}', '${tab.label}')">🗑️ Delete</button>` : ''}
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  async function createTab() {
+    const key = document.getElementById('new-tab-key').value.trim();
+    const label = document.getElementById('new-tab-label').value.trim();
+
+    if (!key || !label) {
+      alert('Please fill in both Tab Key and Tab Label');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/tabs/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, label })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ Tab created successfully!');
+        document.getElementById('new-tab-key').value = '';
+        document.getElementById('new-tab-label').value = '';
+        await loadTabsAndCategories();
+        loadTabManager();
+      } else {
+        alert('❌ ' + (data.message || 'Failed to create tab'));
       }
     } catch (err) {
-      console.error('Error loading tabs/categories:', err);
+      console.error('Error:', err);
+      alert('❌ Error creating tab');
     }
   }
 
-  // Image preview on file selection
-  document.getElementById('f-image').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const preview = document.getElementById('f-image-preview');
-        preview.src = event.target.result;
-        preview.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
+  function editTabModal(key, label) {
+    const newLabel = prompt(`Edit Tab Label for "${key}":`, label);
+    if (newLabel && newLabel.trim()) {
+      editTab(key, newLabel);
     }
-  });
+  }
 
-  // Manage tab switching
+  async function editTab(key, newLabel) {
+    try {
+      const res = await fetch('/api/tabs/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, newLabel })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ Tab updated successfully!');
+        await loadTabsAndCategories();
+        loadTabManager();
+      } else {
+        alert('❌ ' + (data.message || 'Failed to update tab'));
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('❌ Error updating tab');
+    }
+  }
+
+  async function reorderTab(key, direction) {
+    try {
+      const res = await fetch('/api/tabs/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, direction })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        await loadTabsAndCategories();
+        loadTabManager();
+      }
+    } catch (err) {
+      console.error('Error:', err);
+    }
+  }
+
+  function deleteTabConfirm(key, label) {
+    const itemCount = allMenuItems.filter(item => item.tab === key).length;
+    const confirm1 = confirm(`⚠️ Delete Tab: "${label}"?\n\nThis tab has ${itemCount} items. They will be moved to another tab.`);
+    if (confirm1) {
+      const confirm2 = confirm('⚠️ Are you absolutely sure? This action cannot be undone!');
+      if (confirm2) {
+        deleteTab(key);
+      }
+    }
+  }
+
+  async function deleteTab(key) {
+    try {
+      const res = await fetch('/api/tabs/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ Tab deleted successfully!');
+        await loadTabsAndCategories();
+        loadTabManager();
+      } else {
+        alert('❌ ' + (data.message || 'Failed to delete tab'));
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('❌ Error deleting tab');
+    }
+  }
+
+  // ============================================
+  // CATEGORY MANAGEMENT
+  // ============================================
+
+  async function loadCategoryManager() {
+    const container = document.getElementById('categories-container');
+    container.innerHTML = '';
+
+    const sortedTabs = [...allTabs].sort((a, b) => a.sortOrder - b.sortOrder);
+
+    sortedTabs.forEach(tab => {
+      const section = document.createElement('div');
+      section.style.marginBottom = '30px';
+
+      const header = document.createElement('div');
+      header.className = 'tab-header';
+      header.innerHTML = `<h3>${tab.label}</h3>`;
+      section.appendChild(header);
+
+      // Create new category form
+      const formDiv = document.createElement('div');
+      formDiv.className = 'form-container';
+      formDiv.style.marginBottom = '15px';
+      formDiv.innerHTML = `
+        <h3>Create New Category</h3>
+        <div style="display: flex; gap: 10px; align-items: flex-end;">
+          <input type="text" id="new-cat-name-${tab.key}" placeholder="Category name (e.g., 'Starters / Appetizers')" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+          <button class="btn-small" onclick="createCategory('${tab.key}')">Create</button>
+        </div>
+      `;
+      section.appendChild(formDiv);
+
+      // List existing categories
+      const cats = (allCategories[tab.key] || []).sort((a, b) => a.sortOrder - b.sortOrder);
+      const catList = document.createElement('div');
+
+      if (cats.length === 0) {
+        catList.innerHTML = '<p style="color: var(--muted); font-size: 13px;">No categories in this tab yet.</p>';
+      } else {
+        cats.forEach((cat, idx) => {
+          const itemCount = allMenuItems.filter(item => item.tab === tab.key && item.category === cat.name).length;
+          
+          const card = document.createElement('div');
+          card.className = 'item-card';
+          card.innerHTML = `
+            <div>
+              <div class="item-card-name">${cat.name}</div>
+              <div class="item-card-info">${itemCount} items</div>
+            </div>
+            <div class="item-controls">
+              <button class="btn-small up" onclick="reorderCategory('${cat._id}', 'up')" ${idx === 0 ? 'disabled' : ''}>↑</button>
+              <button class="btn-small down" onclick="reorderCategory('${cat._id}', 'down')" ${idx === cats.length - 1 ? 'disabled' : ''}>↓</button>
+              <button class="btn-small edit" onclick="editCategoryModal('${cat._id}', '${cat.name}')">✎ Edit</button>
+              <button class="btn-small delete" onclick="deleteCategoryConfirm('${cat._id}', '${cat.name}')">🗑️ Delete</button>
+            </div>
+          `;
+          catList.appendChild(card);
+        });
+      }
+
+      section.appendChild(catList);
+      container.appendChild(section);
+    });
+  }
+
+  async function createCategory(tabKey) {
+    const nameInput = document.getElementById(`new-cat-name-${tabKey}`);
+    const name = nameInput.value.trim();
+
+    if (!name) {
+      alert('Please enter a category name');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/categories/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tabKey, name })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ Category created successfully!');
+        nameInput.value = '';
+        await loadTabsAndCategories();
+        loadCategoryManager();
+      } else {
+        alert('❌ ' + (data.message || 'Failed to create category'));
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('❌ Error creating category');
+    }
+  }
+
+  function editCategoryModal(categoryId, currentName) {
+    const newName = prompt('Edit Category Name:', currentName);
+    if (newName && newName.trim()) {
+      editCategory(categoryId, newName);
+    }
+  }
+
+  async function editCategory(categoryId, newName) {
+    try {
+      const res = await fetch('/api/categories/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryId, newName })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ Category updated successfully!');
+        await loadTabsAndCategories();
+        loadCategoryManager();
+      } else {
+        alert('❌ ' + (data.message || 'Failed to update category'));
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('❌ Error updating category');
+    }
+  }
+
+  async function reorderCategory(categoryId, direction) {
+    try {
+      const res = await fetch('/api/categories/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryId, direction })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        await loadTabsAndCategories();
+        loadCategoryManager();
+      }
+    } catch (err) {
+      console.error('Error:', err);
+    }
+  }
+
+  function deleteCategoryConfirm(categoryId, categoryName) {
+    const cat = allCategories[Object.keys(allCategories)[0]]?.find(c => c._id === categoryId);
+    const itemCount = allMenuItems.filter(item => item.category === categoryName).length;
+    
+    const confirm1 = confirm(`⚠️ Delete Category: "${categoryName}"?\n\nThis category has ${itemCount} items. They will be moved to another category.`);
+    if (confirm1) {
+      const confirm2 = confirm('⚠️ Are you absolutely sure? This action cannot be undone!');
+      if (confirm2) {
+        deleteCategory(categoryId);
+      }
+    }
+  }
+
+  async function deleteCategory(categoryId) {
+    try {
+      const res = await fetch('/api/categories/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryId })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ Category deleted successfully!');
+        await loadTabsAndCategories();
+        loadCategoryManager();
+      } else {
+        alert('❌ ' + (data.message || 'Failed to delete category'));
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('❌ Error deleting category');
+    }
+  }
+
+  // ============================================
+  // MENU MANAGEMENT
+  // ============================================
+
+  async function loadMenu(tab = 'food') {
+    const list = document.getElementById('menu-list');
+    list.innerHTML = '';
+
+    const tabItems = allMenuItems.filter(i => i.tab === tab);
+    const categories = (allCategories[tab] || []).map(c => c.name);
+    
+    if (categories.length === 0) {
+      const derived = [...new Set(tabItems.map(i => i.category))];
+      categories.push(...derived);
+    }
+    
+    categories.sort((a, b) => {
+      const catA = (allCategories[tab] || []).find(c => c.name === a);
+      const catB = (allCategories[tab] || []).find(c => c.name === b);
+      const orderA = catA ? catA.sortOrder : 999;
+      const orderB = catB ? catB.sortOrder : 999;
+      return orderA - orderB;
+    });
+
+    categories.forEach(cat => {
+      const catDiv = document.createElement('div');
+      catDiv.style.marginBottom = '25px';
+      
+      const catTitle = document.createElement('h3');
+      catTitle.style.cssText = 'color: var(--gold); border-bottom: 1px solid rgba(139,90,43,0.2); padding-bottom: 8px; margin-bottom: 15px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;';
+      catTitle.innerText = cat;
+      catDiv.appendChild(catTitle);
+      
+      const catItems = tabItems.filter(i => i.category === cat).sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999));
+
+      catItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'menu-item';
+        div.innerHTML = `
+          <div class="item-info">
+            <strong>${item.name}</strong> <span>${item.price}</span><br>
+            <span style="margin-left:0; font-size:10px; text-transform:uppercase;">${item.category}</span>
+            ${item.image ? '<span style="margin-left:10px; font-size:10px; color:#4CAF82;">📷 Image</span>' : ''}
+          </div>
+          <label class="switch">
+            <input type="checkbox" ${item.available ? 'checked' : ''} onchange="toggleItem('${item.id}')">
+            <span class="slider"></span>
+          </label>
+        `;
+        catDiv.appendChild(div);
+      });
+      list.appendChild(catDiv);
+    });
+  }
+
   function switchManageTab(tab, btn) {
     document.querySelectorAll('#manage-tabs .tab-btn').forEach(b => b.style.borderBottomColor = 'transparent');
     btn.style.borderBottomColor = 'var(--gold)';
     loadMenu(tab);
   }
 
-  // Edit image preview
-  if (document.getElementById('edit-image-file')) {
-    document.getElementById('edit-image-file').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const preview = document.getElementById('edit-image-preview');
-          preview.src = event.target.result;
-          preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-      }
+  async function toggleItem(id) {
+    await fetch('/api/menu/toggle', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
     });
   }
 
-  let currentEditItem = null;
+  // ============================================
+  // EDIT ITEM
+  // ============================================
 
-  // Search for items to edit
-  document.getElementById('edit-search-input').addEventListener('input', async (e) => {
+  document.getElementById('edit-search-input').addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase();
     if (query.length < 2) {
       document.getElementById('edit-search-results').innerHTML = '';
       return;
     }
     
-    const res = await fetch('/api/menu');
-    const menu = await res.json();
-    const results = menu.filter(item => 
+    const results = allMenuItems.filter(item => 
       item.name.toLowerCase().includes(query) || 
       item.category.toLowerCase().includes(query)
     );
@@ -350,38 +733,31 @@ input:checked + .slider:before { transform: translateX(26px); }
     `).join('');
   });
 
+  let currentEditItem = null;
+
   function selectItemForEdit(id, name, currentImage, currentTab, currentCategory) {
     currentEditItem = id;
     document.getElementById('edit-item-name').innerText = `Editing: ${name}`;
     document.getElementById('edit-item-form').style.display = 'block';
     document.getElementById('edit-image-file').value = '';
-    document.getElementById('edit-price-input').value = '';
     
-    // Populate Tab options
     const tabSelect = document.getElementById('edit-tab');
     tabSelect.innerHTML = allTabs.map(t => `<option value="${t.key}">${t.label}</option>`).join('');
     tabSelect.value = currentTab || 'food';
-    
-    // Trigger category load based on the tab
     tabSelect.dispatchEvent(new Event('change'));
     
-    // Set the current category after a tiny delay so the options can generate
     setTimeout(() => {
       document.getElementById('edit-cat').value = currentCategory;
     }, 50);
 
-    // Get current price from menu
-    fetch('/api/menu').then(res => res.json()).then(menu => {
-      const item = menu.find(i => i.id === id);
-      if (item) {
-        const priceStr = item.price.replace('€ ', '').trim();
-        document.getElementById('edit-price-input').value = priceStr;
-        
-        document.getElementById('edit-veg').checked = item.isVegetarian || false;
-        document.getElementById('edit-vegan').checked = item.isVegan || false;
-        document.getElementById('edit-gf').checked = item.isGlutenFree || false;
-      }
-    });
+    const item = allMenuItems.find(i => i.id === id);
+    if (item) {
+      const priceStr = item.price.replace('€ ', '').trim();
+      document.getElementById('edit-price-input').value = priceStr;
+      document.getElementById('edit-veg').checked = item.isVegetarian || false;
+      document.getElementById('edit-vegan').checked = item.isVegan || false;
+      document.getElementById('edit-gf').checked = item.isGlutenFree || false;
+    }
     
     if (currentImage) {
       document.getElementById('edit-image-preview').src = currentImage;
@@ -402,12 +778,8 @@ input:checked + .slider:before { transform: translateX(26px); }
 
   async function updateItemPrice() {
     if (!currentEditItem) return;
-    
     const priceInput = document.getElementById('edit-price-input').value.trim();
-    if (!priceInput) {
-      alert('Please enter a price');
-      return;
-    }
+    if (!priceInput) { alert('Please enter a price'); return; }
     
     const newPrice = '€ ' + priceInput;
     
@@ -423,28 +795,10 @@ input:checked + .slider:before { transform: translateX(26px); }
       })
     });
     
-    alert('Price updated successfully!');
+    alert('✅ Price updated!');
     cancelEdit();
+    await loadTabsAndCategories();
     loadMenu();
-  }
-
-  async function deleteItem() {
-    if (!currentEditItem) return;
-    
-    const itemName = document.getElementById('edit-item-name').innerText.replace('Editing: ', '');
-    const confirmDelete = confirm(`Are you sure you want to DELETE "${itemName}"?\n\nThis action cannot be undone!`);
-    
-    if (confirmDelete) {
-      await fetch('/api/menu/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: currentEditItem })
-      });
-      
-      alert('Item deleted successfully!');
-      cancelEdit();
-      loadMenu();
-    }
   }
 
   async function saveEditedItem() {
@@ -483,112 +837,12 @@ input:checked + .slider:before { transform: translateX(26px); }
           isGlutenFree: document.getElementById('edit-gf').checked
         })
       });
-      alert('Image added successfully!');
+      alert('✅ Image added!');
       cancelEdit();
+      await loadTabsAndCategories();
       loadMenu();
     } else {
       alert('Please select an image to upload');
-    }
-  }
-
-  // Load Menu for toggling - organized by category
-  async function loadMenu(tab = 'food') {
-    const res = await fetch('/api/menu');
-    const menu = await res.json();
-    const list = document.getElementById('menu-list');
-    list.innerHTML = '';
-
-    const tabItems = menu.filter(i => i.tab === tab);
-    
-    // Get categories from database, sorted by sortOrder
-    const categories = (allCategories[tab] || []).map(c => c.name);
-    
-    // Fall back to deriving categories if database is empty
-    if (categories.length === 0) {
-      const derived = [...new Set(tabItems.map(i => i.category))];
-      categories.push(...derived);
-    }
-    
-    categories.forEach(cat => {
-      const catDiv = document.createElement('div');
-      catDiv.style.marginBottom = '25px';
-      
-      const catTitle = document.createElement('h3');
-      catTitle.style.cssText = 'color: var(--gold); border-bottom: 1px solid rgba(139,90,43,0.2); padding-bottom: 8px; margin-bottom: 15px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;';
-      catTitle.innerText = cat;
-      catDiv.appendChild(catTitle);
-      
-      // Sort items within category by sortOrder
-      const catItems = tabItems.filter(i => i.category === cat);
-      catItems.sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999));
-
-      catItems.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'menu-item';
-        div.innerHTML = `
-          <div class="item-info">
-            <strong>${item.name}</strong> <span>${item.price}</span><br>
-            <span style="margin-left:0; font-size:10px; text-transform:uppercase;">${item.category}</span>
-            ${item.image ? '<span style="margin-left:10px; font-size:10px; color:#4CAF82;">📷 Image</span>' : ''}
-          </div>
-          <label class="switch">
-            <input type="checkbox" ${item.available ? 'checked' : ''} onchange="toggleItem('${item.id}')">
-            <span class="slider"></span>
-          </label>
-        `;
-        catDiv.appendChild(div);
-      });
-      list.appendChild(catDiv);
-    });
-  }
-
-  async function toggleItem(id) {
-    await fetch('/api/menu/toggle', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
-    });
-  }
-
-  async function loadAnalytics() {
-    const res = await fetch('/api/menu');
-    let menu = await res.json();
-    
-    menu = menu.filter(item => item.clicks > 0).sort((a, b) => b.clicks - a.clicks);
-    
-    const container = document.getElementById('analytics-container');
-    if (menu.length === 0) {
-      container.innerHTML = '<p>No analytics data yet. Wait for customers to tap items!</p>';
-      return;
-    }
-
-    const maxClicks = menu[0].clicks;
-
-    container.innerHTML = menu.map(item => {
-      const percentage = (item.clicks / maxClicks) * 100;
-      return `
-        <div style="margin-bottom: 15px;">
-          <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
-            <strong>${item.name}</strong>
-            <span style="color: var(--gold); font-weight: 600;">${item.clicks} clicks</span>
-          </div>
-          <div style="width: 100%; height: 8px; background: #eee; border-radius: 4px; overflow: hidden;">
-            <div style="width: ${percentage}%; height: 100%; background: #4CAF82; border-radius: 4px;"></div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  async function resetAnalytics() {
-    const confirmReset = confirm("⚠️ Are you sure you want to reset all analytics data?\n\nThis will set all clicks back to zero and cannot be undone.");
-    
-    if (confirmReset) {
-      await fetch('/api/menu/reset-analytics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      alert('Analytics reset successfully!');
-      loadAnalytics();
     }
   }
 
@@ -604,155 +858,36 @@ input:checked + .slider:before { transform: translateX(26px); }
       body: JSON.stringify({ id: currentEditItem, tab: newTab, category: newCat })
     });
     
-    alert('Item moved successfully!');
+    alert('✅ Item moved!');
     cancelEdit();
+    await loadTabsAndCategories();
     loadMenu();
   }
 
-  // NEW: Load and render the Category Manager
-  async function loadCategoryManager() {
-    const container = document.getElementById('category-manager-container');
-    container.innerHTML = '';
-
-    for (const tab of allTabs) {
-      const tabDiv = document.createElement('div');
-      tabDiv.style.marginBottom = '30px';
-      tabDiv.style.padding = '20px';
-      tabDiv.style.background = '#f9f9f9';
-      tabDiv.style.borderRadius = '8px';
-
-      const tabTitle = document.createElement('h3');
-      tabTitle.style.color = 'var(--gold)';
-      tabTitle.style.marginBottom = '15px';
-      tabTitle.innerText = `${tab.label} (${tab.key})`;
-      tabDiv.appendChild(tabTitle);
-
-      const categoriesList = document.createElement('div');
-      const cats = allCategories[tab.key] || [];
-      
-      if (cats.length === 0) {
-        categoriesList.innerText = 'No categories yet.';
-        tabDiv.appendChild(categoriesList);
-        container.appendChild(tabDiv);
-        continue;
-      }
-
-      cats.forEach((cat, idx) => {
-        const catItem = document.createElement('div');
-        catItem.className = 'category-item';
-        
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'category-item-name';
-        nameSpan.innerText = cat.name;
-        catItem.appendChild(nameSpan);
-
-        const controls = document.createElement('div');
-        controls.className = 'category-controls';
-
-        // Up button
-        const upBtn = document.createElement('button');
-        upBtn.className = 'btn-arrow';
-        upBtn.innerText = '↑';
-        upBtn.onclick = async (e) => {
-          e.preventDefault();
-          await fetch('/api/categories/reorder', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ categoryId: cat._id, direction: 'up' })
-          });
-          loadCategoryManager();
-        };
-        controls.appendChild(upBtn);
-
-        // Down button
-        const downBtn = document.createElement('button');
-        downBtn.className = 'btn-arrow';
-        downBtn.innerText = '↓';
-        downBtn.onclick = async (e) => {
-          e.preventDefault();
-          await fetch('/api/categories/reorder', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ categoryId: cat._id, direction: 'down' })
-          });
-          loadCategoryManager();
-        };
-        controls.appendChild(downBtn);
-
-        catItem.appendChild(controls);
-        categoriesList.appendChild(catItem);
-      });
-
-      tabDiv.appendChild(categoriesList);
-      container.appendChild(tabDiv);
-    }
-  }
-  
-  // Add Item with Duplicate Prevention
-  document.getElementById('addForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+  async function deleteItem() {
+    if (!currentEditItem) return;
     
-    try {
-      let imagePath = '';
-      const fileInput = document.getElementById('f-image');
-
-      if (fileInput && fileInput.files.length > 0) {
-        const formData = new FormData();
-        formData.append('image', fileInput.files[0]);
-        
-        const uploadRes = await fetch('/api/menu/upload-image', {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (!uploadRes.ok) {
-          const errorData = await uploadRes.json();
-          alert(`❌ Image Upload Failed: ${errorData.message || 'Check server logs'}`);
-          return;
-        }
-        const uploadData = await uploadRes.json();
-        imagePath = uploadData.imagePath;
-      }
-
-      const newItem = {
-        tab: document.getElementById('f-tab') ? document.getElementById('f-tab').value : 'food',
-        category: document.getElementById('f-cat') ? document.getElementById('f-cat').value : '',
-        name: document.getElementById('f-name') ? document.getElementById('f-name').value : '',
-        price: document.getElementById('f-price') ? '€ ' + document.getElementById('f-price').value : '',
-        desc_it: document.getElementById('f-desc-it') ? document.getElementById('f-desc-it').value : '',
-        desc_en: document.getElementById('f-desc-en') ? document.getElementById('f-desc-en').value : '',
-        desc_es: document.getElementById('f-desc-es') ? document.getElementById('f-desc-es').value : '',
-        desc_de: document.getElementById('f-desc-de') ? document.getElementById('f-desc-de').value : '',
-        desc_fr: document.getElementById('f-desc-fr') ? document.getElementById('f-desc-fr').value : '',
-        image: imagePath,
-        available: true,
-        isVegetarian: document.getElementById('f-veg') ? document.getElementById('f-veg').checked : false,
-        isVegan: document.getElementById('f-vegan') ? document.getElementById('f-vegan').checked : false,
-        isGlutenFree: document.getElementById('f-gf') ? document.getElementById('f-gf').checked : false
-      };
-
-      const res = await fetch('/api/menu/add', {
+    const itemName = document.getElementById('edit-item-name').innerText.replace('Editing: ', '');
+    const confirmDelete = confirm(`⚠️ DELETE "${itemName}"?\n\nThis cannot be undone!`);
+    
+    if (confirmDelete) {
+      await fetch('/api/menu/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newItem)
+        body: JSON.stringify({ id: currentEditItem })
       });
-
-      if (res.ok) {
-        alert('✅ Item added successfully!');
-        document.getElementById('addForm').reset();
-        if (typeof loadMenu === 'function') loadMenu();
-      } else {
-        const errData = await res.json();
-        alert('❌ Server Error: ' + errData.message);
-      }
       
-    } catch (error) {
-      console.error(error);
-      alert('❌ Frontend Crash: ' + error.message + '\n\nThis usually means an HTML ID is missing.');
+      alert('✅ Item deleted!');
+      cancelEdit();
+      await loadTabsAndCategories();
+      loadMenu();
     }
-  });
+  }
 
-  // --- DYNAMIC CATEGORY DROPDOWN LOGIC (now uses allCategories) ---
+  // ============================================
+  // ADD ITEM
+  // ============================================
+
   document.getElementById('f-tab').addEventListener('change', function() {
     const selectedSection = this.value;
     const catSelect = document.getElementById('f-cat');
@@ -782,15 +917,155 @@ input:checked + .slider:before { transform: translateX(26px); }
       });
     }
   });
-  
-  // Initialize on page load
+
+  document.getElementById('f-image').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        document.getElementById('f-image-preview').src = event.target.result;
+        document.getElementById('f-image-preview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  document.getElementById('edit-image-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        document.getElementById('edit-image-preview').src = event.target.result;
+        document.getElementById('edit-image-preview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  document.getElementById('addForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    try {
+      let imagePath = '';
+      const fileInput = document.getElementById('f-image');
+
+      if (fileInput && fileInput.files.length > 0) {
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        
+        const uploadRes = await fetch('/api/menu/upload-image', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json();
+          alert(`❌ Image Upload Failed: ${errorData.message || 'Check server logs'}`);
+          return;
+        }
+        const uploadData = await uploadRes.json();
+        imagePath = uploadData.imagePath;
+      }
+
+      const newItem = {
+        tab: document.getElementById('f-tab').value,
+        category: document.getElementById('f-cat').value,
+        name: document.getElementById('f-name').value,
+        price: '€ ' + document.getElementById('f-price').value,
+        desc_it: document.getElementById('f-desc-it').value,
+        desc_en: document.getElementById('f-desc-en').value,
+        image: imagePath,
+        available: true,
+        isVegetarian: document.getElementById('f-veg').checked,
+        isVegan: document.getElementById('f-vegan').checked,
+        isGlutenFree: document.getElementById('f-gf').checked
+      };
+
+      const res = await fetch('/api/menu/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem)
+      });
+
+      if (res.ok) {
+        alert('✅ Item added successfully!');
+        document.getElementById('addForm').reset();
+        document.getElementById('f-image-preview').style.display = 'none';
+        await loadTabsAndCategories();
+        loadMenu('bar');
+      } else {
+        const errData = await res.json();
+        alert('❌ Server Error: ' + errData.message);
+      }
+      
+    } catch (error) {
+      console.error(error);
+      alert('❌ Error: ' + error.message);
+    }
+  });
+
+  // ============================================
+  // ANALYTICS
+  // ============================================
+
+  async function loadAnalytics() {
+    let menu = [...allMenuItems].filter(item => item.clicks > 0).sort((a, b) => b.clicks - a.clicks);
+    
+    const container = document.getElementById('analytics-container');
+    if (menu.length === 0) {
+      container.innerHTML = '<p>No analytics data yet. Wait for customers to tap items!</p>';
+      return;
+    }
+
+    const maxClicks = menu[0].clicks;
+
+    container.innerHTML = menu.map(item => {
+      const percentage = (item.clicks / maxClicks) * 100;
+      return `
+        <div style="margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+            <strong>${item.name}</strong>
+            <span style="color: var(--gold); font-weight: 600;">${item.clicks} clicks</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: #eee; border-radius: 4px; overflow: hidden;">
+            <div style="width: ${percentage}%; height: 100%; background: #4CAF82; border-radius: 4px;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function resetAnalytics() {
+    const confirmReset = confirm("⚠️ Reset all analytics?\n\nThis will set all clicks back to zero and cannot be undone.");
+    
+    if (confirmReset) {
+      await fetch('/api/menu/reset-analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      alert('✅ Analytics reset!');
+      await loadTabsAndCategories();
+      loadAnalytics();
+    }
+  }
+
+  // ============================================
+  // INITIALIZATION
+  // ============================================
+
   async function initializePage() {
     await loadTabsAndCategories();
     loadQr();
     loadMenu('bar');
     document.querySelectorAll('#manage-tabs .tab-btn')[0].style.borderBottomColor = 'var(--gold)';
-    
-    // Populate f-tab dropdown on load
+    document.getElementById('f-tab').innerHTML = '';
+    allTabs.forEach(tab => {
+      const opt = document.createElement('option');
+      opt.value = tab.key;
+      opt.textContent = tab.label;
+      document.getElementById('f-tab').appendChild(opt);
+    });
     document.getElementById('f-tab').dispatchEvent(new Event('change'));
   }
 
