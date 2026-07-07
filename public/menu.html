@@ -326,16 +326,29 @@ async function fetchMenu() {
       globalCategoriesData[tab.key] = await catRes.json();
     }
 
-    // NEW: Dynamically build the navigation buttons based on your Admin sorting!
+    // NEW: Dynamically build the navigation buttons based on the QR Code scanned!
     const navContainer = document.getElementById('nav-container');
     navContainer.innerHTML = ''; 
     
-    // Sort tabs by database order
     const sortedTabs = [...globalTabsData].sort((a, b) => a.sortOrder - b.sortOrder);
     
-    sortedTabs.forEach((tab, index) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const menuType = urlParams.get('menu');
+    
+    // STRICT FILTERING: Only show the correct tabs for the correct QR code
+    let visibleTabs = [];
+    if (menuType === 'wine') {
+      visibleTabs = sortedTabs.filter(t => t.key === 'wine');
+    } else if (menuType === 'desserts') {
+      visibleTabs = sortedTabs.filter(t => t.key === 'desserts');
+    } else {
+      // Main Menu: Hide wine and desserts
+      visibleTabs = sortedTabs.filter(t => t.key !== 'wine' && t.key !== 'desserts');
+    }
+
+    visibleTabs.forEach((tab, index) => {
       const btn = document.createElement('button');
-      btn.className = `tab-btn ${index === 0 ? 'active' : ''}`; // Make the first one active
+      btn.className = `tab-btn ${index === 0 ? 'active' : ''}`;
       btn.id = `${tab.key}-tab`;
       btn.innerText = tab.label.toUpperCase();
       btn.onclick = function() { showTab(tab.key, this); };
@@ -357,37 +370,36 @@ function renderMenu() {
   if (!container) return;
   container.innerHTML = '';
 
-  // NEW: Pull the active tabs directly from the database instead of hardcoding them
-  let tabs = globalTabsData.map(t => t.key).filter(k => k !== 'wine' && k !== 'desserts');
-  
-  let activeTabName = 'bar';
-  const activeBtn = document.querySelector('.tab-btn.active');
-  if (activeBtn) {
-    const text = activeBtn.innerText.toUpperCase();
-    if (text.includes('PIZZA') || text.includes('PANINI') || text.includes('SANDWICH')) activeTabName = 'food';
-    else if (text.includes('REST')) activeTabName = 'restaurant';
-    else if (text.includes('COCKTAIL') || text.includes('CÓCTEL')) activeTabName = 'cocktails';
-  }
+  let tabs = [];
+  let activeTabName = '';
 
+  // Cleanly determine which sections to draw based on the QR code
   if (menuType === 'wine') {
     document.body.classList.add('wine-theme');
     tabs = ['wine'];
     activeTabName = 'wine';
-    if(document.getElementById('wine-tab')) document.getElementById('wine-tab').style.display = 'block';
-    if(document.getElementById('desserts-tab')) document.getElementById('desserts-tab').style.display = 'none';
-    document.querySelectorAll('.tab-btn').forEach((btn, idx) => { if (idx < 4) btn.style.display = 'none'; });
     container.classList.add('wine-section');
   } else if (menuType === 'desserts') {
     tabs = ['desserts'];
     activeTabName = 'desserts';
-    if(document.getElementById('desserts-tab')) document.getElementById('desserts-tab').style.display = 'block';
-    if(document.getElementById('wine-tab')) document.getElementById('wine-tab').style.display = 'none';
-    document.querySelectorAll('.tab-btn').forEach((btn, idx) => { if (idx < 4) btn.style.display = 'none'; });
+  } else {
+    // Main Menu: Render all tabs EXCEPT wine and desserts
+    tabs = globalTabsData.map(t => t.key).filter(k => k !== 'wine' && k !== 'desserts');
+    
+    // Find which tab is active based on the newly generated buttons
+    const activeBtn = document.querySelector('.tab-btn.active');
+    if (activeBtn) {
+      activeTabName = activeBtn.id.replace('-tab', '');
+    } else if (tabs.length > 0) {
+      activeTabName = tabs[0];
+    }
   }
 
   const currentLang = document.getElementById('lang-switcher') ? document.getElementById('lang-switcher').value : 'en';
 
   tabs.forEach(tab => {
+    // ... THE REST OF YOUR EXISTING RENDERMENU CODE CONTINUES HERE ...
+    // (Do not delete anything below this point!)
     const section = document.createElement('section');
     section.className = `menu-section ${tab === activeTabName ? 'active' : ''}`;
     section.id = `section-${tab}`;
